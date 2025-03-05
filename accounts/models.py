@@ -55,6 +55,8 @@ class User(AbstractUser):
     gender = models.CharField(
         choices=GENDER_CHOICES, max_length=1, blank=True, null=True
     )
+    # allergy = 추가 예정
+    # favorite = 추가 예정
 
     # 비공개 필드
     role = models.CharField(choices=ROLE_CHOICES, max_length=1, default="U")
@@ -65,7 +67,7 @@ class User(AbstractUser):
 
     # 디폴트 닉네임 생성
     def generate_default_nickname(self):
-        base_nickname = self.email.split('@')[0]
+        base_nickname = self.email.split("@")[0]
         nickname = base_nickname[:30]
 
         # 중복 체크 및 숫자 추가
