@@ -5,9 +5,11 @@ User = get_user_model()
 
 
 class SignUpSerializer(serializers.ModelSerializer):
+    password_confirm = serializers.CharField(write_only=True)
+
     class Meta:
         model = User
-        fields = ["username", "password", "nickname", "role"]
+        fields = ["email", "password", "password_confirm", "nickname", "role"]
         extra_kwargs = {
             "password": {"write_only": True},
             "role": {"read_only": True},
@@ -15,6 +17,8 @@ class SignUpSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         password = validated_data.pop("password", None)
+        validated_data.pop("password_confirm", None)
+
         instance = self.Meta.model(**validated_data)
 
         if password is not None:
@@ -31,16 +35,24 @@ class SignUpSerializer(serializers.ModelSerializer):
 
     # 닉네임 검증
     def validate_nickname(self, value):
-        # 길이 검증
         if len(value) > 20:
             raise serializers.ValidationError("닉네임은 20글자 이하이어야 합니다.")
-
         return value
 
     # 비밀번호 검증
     def validate_password(self, value):
-        # 길이 검증
         if len(value) < 8:
             raise serializers.ValidationError("비밀번호는 최소 8자 이상이어야 합니다.")
-
         return value
+
+    # 비밀번호 확인 및 일치 여부 검증
+    def validate(self, data):
+        password = data.get("password")
+        password_confirm = data.get("password_confirm")
+
+        if password != password_confirm:
+            raise serializers.ValidationError(
+                {"password_confirm": "비밀번호가 일치하지 않습니다."}
+            )
+
+        return data
