@@ -35,8 +35,8 @@ class SignUpSerializer(serializers.ModelSerializer):
 
     # 닉네임 검증
     def validate_nickname(self, value):
-        if len(value) > 20:
-            raise serializers.ValidationError("닉네임은 20글자 이하이어야 합니다.")
+        if len(value) > 30:
+            raise serializers.ValidationError("닉네임은 30글자 이하이어야 합니다.")
         return value
 
     # 비밀번호 검증
