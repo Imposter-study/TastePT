@@ -21,6 +21,13 @@ class UserAPIView(APIView):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    # 개인정보 수정
+    @permission_classes([IsAuthenticated])
+    def put(self, request):
+        user = request.user
+
+        return Response(status=status.HTTP_201_CREATED)
+
     # 회원탈퇴
     @permission_classes([IsAuthenticated])
     def delete(self, request):
