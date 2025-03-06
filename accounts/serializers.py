@@ -71,20 +71,17 @@ class ProfileUpdateSerializer(SignUpSerializer):
 
     class Meta(SignUpSerializer.Meta):
         fields = [
-            "email",
             "nickname",
-            "role",
             "age",
             "gender",
         ]
         extra_kwargs = {
-            "role": {"read_only": True},
             "nickname": {"required": False},
-            "email": {"required": False},
             "age": {"required": False},
             "gender": {"required": False},
         }
 
+    # 변경 데이터로 업데이트
     def update(self, instance, validated_data):
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
@@ -92,5 +89,6 @@ class ProfileUpdateSerializer(SignUpSerializer):
         instance.save()
         return instance
 
+    # 비밀번호 일치 여부 검증 코드 삭제
     def validate(self, data):
         return data
