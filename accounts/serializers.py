@@ -92,3 +92,20 @@ class ProfileUpdateSerializer(SignUpSerializer):
     # 비밀번호 일치 여부 검증 코드 삭제
     def validate(self, data):
         return data
+
+
+class PasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(write_only=True, required=True)
+    new_password = serializers.CharField(write_only=True, required=True)
+
+    def validate_old_password(self, value):
+        user = self.context["request"].user
+        if not user.check_password(value):
+            raise serializers.ValidationError("현재 비밀번호가 일치하지 않습니다.")
+        return value
+
+    def save(self, **kwargs):
+        user = self.context["request"].user
+        user.set_password(self.validated_data["new_password"])
+        user.save()
+        return user
