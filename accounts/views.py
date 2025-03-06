@@ -1,4 +1,4 @@
-from django.contrib.auth import authenticate, get_user_model, login
+from django.contrib.auth import authenticate, get_user_model, login, logout
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -8,7 +8,8 @@ from .serializers import SignUpSerializer
 User = get_user_model()
 
 
-class SignUpAPIView(APIView):
+class UserAPIView(APIView):
+    # 회원가입
     def post(self, request):
         serializer = SignUpSerializer(data=request.data)
 
@@ -20,11 +21,11 @@ class SignUpAPIView(APIView):
 
 
 class SignInAPIView(APIView):
+    # 로그인
     def post(self, request):
         username = request.data.get("username")
         password = request.data.get("password")
 
-        # 사용자 인증
         user = authenticate(username=username, password=password)
 
         if user is None:
@@ -33,13 +34,28 @@ class SignInAPIView(APIView):
                 status=status.HTTP_401_UNAUTHORIZED,
             )
 
-        # 로그인 처리 (세션에 사용자 정보 저장)
         login(request, user)
 
         return Response(
             {
                 "detail": "로그인 성공",
-                "nickname": user.nickname,  # 로그인된 사용자 이름 반환 (선택 사항)
+                "nickname": user.nickname,
             },
+            status=status.HTTP_200_OK,
+        )
+
+
+class SignOutAPIView(APIView):
+    def post(self, request):
+        if not request.user.is_authenticated:
+            return Response(
+                {"detail": "이미 로그아웃된 상태입니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        logout(request)
+
+        return Response(
+            {"detail": "로그아웃 성공"},
             status=status.HTTP_200_OK,
         )

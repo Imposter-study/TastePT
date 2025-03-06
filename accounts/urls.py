@@ -2,6 +2,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path("", views.SignUpAPIView.as_view(), name="signup"),
-    path("signin/", views.SignInAPIView.as_view(), name="signin"),
+    path("", views.UserAPIView.as_view()),
+    path("signin/", views.SignInAPIView.as_view()),
+    path("signout/", views.SignOutAPIView.as_view()),
 ]
