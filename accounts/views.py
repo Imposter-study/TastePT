@@ -1,5 +1,8 @@
 from django.contrib.auth import authenticate, get_user_model, login, logout
+from django.utils import timezone
 from rest_framework import status
+from rest_framework.decorators import permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .serializers import SignUpSerializer
@@ -18,6 +21,25 @@ class UserAPIView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    # 회원탈퇴
+    @permission_classes([IsAuthenticated])
+    def delete(self, request):
+        user = request.user
+        password = request.data.get("password")
+
+        print(password)
+        print(user.password)
+
+        if (not user.has_usable_password()) or (user.check_password(password)):
+            request.user.is_active = False
+            request.user.deactivate_time = timezone.now()
+            request.user.save()
+
+        return Response(
+            {"massage": "비밀번호가 일치하지 않습니다."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
 
 class SignInAPIView(APIView):
@@ -46,13 +68,9 @@ class SignInAPIView(APIView):
 
 
 class SignOutAPIView(APIView):
-    def post(self, request):
-        if not request.user.is_authenticated:
-            return Response(
-                {"detail": "이미 로그아웃된 상태입니다."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+    permission_classes = [IsAuthenticated]
 
+    def post(self, request):
         logout(request)
 
         return Response(
