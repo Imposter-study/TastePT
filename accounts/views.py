@@ -1,4 +1,6 @@
 from django.contrib.auth import authenticate, get_user_model, login, logout
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -18,6 +20,30 @@ class UserAPIView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    # 회원탈퇴
+    @permission_classes([IsAuthenticated])
+    def delete(self, request):
+        user = request.user
+        password = request.data.get("password")
+
+        print(password)
+        print(user.password)
+
+        if (not user.has_usable_password()) or (user.check_password(password)):
+            request.user.is_active = False
+            request.user.deactivate_time = timezone.now()
+            request.user.save()
+
+            return Response(
+                {"message": "회원이 비활성화 되었습니다."},
+                status=status.HTTP_200_OK,
+            )
+
+        return Response(
+            {"massage": "비밀번호가 일치하지 않습니다."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
 
 class SignInAPIView(APIView):
