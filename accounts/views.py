@@ -2,6 +2,8 @@ from django.contrib.auth import authenticate, get_user_model, login, logout
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import status
+from rest_framework.decorators import permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .serializers import SignUpSerializer, ProfileUpdateSerializer
@@ -108,13 +110,9 @@ class SignInAPIView(APIView):
 
 
 class SignOutAPIView(APIView):
-    def post(self, request):
-        if not request.user.is_authenticated:
-            return Response(
-                {"detail": "이미 로그아웃된 상태입니다."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+    permission_classes = [IsAuthenticated]
 
+    def post(self, request):
         logout(request)
 
         return Response(
