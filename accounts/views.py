@@ -36,6 +36,11 @@ class UserAPIView(APIView):
             request.user.deactivate_time = timezone.now()
             request.user.save()
 
+            return Response(
+                {"message": "회원이 비활성화 되었습니다."},
+                status=status.HTTP_200_OK,
+            )
+
         return Response(
             {"massage": "비밀번호가 일치하지 않습니다."},
             status=status.HTTP_400_BAD_REQUEST,
