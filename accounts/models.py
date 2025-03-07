@@ -60,6 +60,7 @@ class User(AbstractUser):
 
     # 비공개 필드
     role = models.CharField(choices=ROLE_CHOICES, max_length=1, default="U")
+    deactivate_time = models.DateTimeField(default=None, blank=True, null=True)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
