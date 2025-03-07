@@ -64,3 +64,31 @@ class SignUpSerializer(serializers.ModelSerializer):
             )
 
         return data
+
+
+class ProfileUpdateSerializer(SignUpSerializer):
+    password_confirm = serializers.CharField(write_only=True, required=False)
+
+    class Meta(SignUpSerializer.Meta):
+        fields = [
+            "nickname",
+            "age",
+            "gender",
+        ]
+        extra_kwargs = {
+            "nickname": {"required": False},
+            "age": {"required": False},
+            "gender": {"required": False},
+        }
+
+    # 변경 데이터로 업데이트
+    def update(self, instance, validated_data):
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        instance.save()
+        return instance
+
+    # 비밀번호 일치 여부 검증 코드 삭제
+    def validate(self, data):
+        return data

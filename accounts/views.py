@@ -1,11 +1,12 @@
 from django.contrib.auth import authenticate, get_user_model, login, logout
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .serializers import SignUpSerializer
+from .serializers import SignUpSerializer, ProfileUpdateSerializer
 
 
 User = get_user_model()
@@ -21,6 +22,19 @@ class UserAPIView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    # 개인정보 수정
+    @permission_classes([IsAuthenticated])
+    def put(self, request):
+        user = request.user
+
+        serializer = ProfileUpdateSerializer(user, data=request.data, partial=True)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # 회원탈퇴
     @permission_classes([IsAuthenticated])
@@ -44,6 +58,29 @@ class UserAPIView(APIView):
         return Response(
             {"massage": "비밀번호가 일치하지 않습니다."},
             status=status.HTTP_400_BAD_REQUEST,
+        )
+
+
+class ProfileAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self, nickname):
+        return get_object_or_404(User, nickname=nickname)
+
+    # 유저 프로필 조회
+    def get(self, request, nickname):
+
+        user = self.get_object(nickname)
+
+        return Response(
+            {
+                "nickname": user.nickname,
+                "age": user.age,
+                "gender": user.gender,
+                # "allergy": 예정
+                # "favorite": 예정
+            },
+            status=status.HTTP_200_OK,
         )
 
 
