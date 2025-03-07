@@ -14,9 +14,5 @@ COPY . /app/
 # Django 서버 실행 포트 설정
 EXPOSE 8000
 
-# DB가 준비될 때까지 대기
-COPY wait-for-it.sh /wait-for-it.sh
-RUN chmod +x /wait-for-it.sh
-
-# Run migrations and start the development server
-CMD ["/wait-for-it.sh", "db:5432", "--", "python", "manage.py", "runserver", "0.0.0.0:8000"]
+# 환경 변수에 따라 다른 커맨드 실행
+CMD ["sh", "-c", "if [ '$DJANGO_ENV' = 'production' ]; then gunicorn myproject.wsgi:application --bind 0.0.0.0:8000; else python manage.py runserver 0.0.0.0:8000; fi"]

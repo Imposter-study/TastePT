@@ -4,7 +4,6 @@ services:
   db:
     image: postgres:15
     container_name: postgres_db
-    restart: always
     environment:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
@@ -13,25 +12,27 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app_network
 
-  web:
+  django_app:
     build:
       context: .
-      dockerfile: Dockerfile
-    container_name: web
-    command: /wait-for-it.sh db:5432 -- python manage.py runserver 0.0.0.0:8000
-    volumes:
-      - .:/app
+    container_name: django_app
+    env_file:
+      - .env
     ports:
       - "8000:8000"
     depends_on:
       - db
     networks:
-      - backend
+      - app_network
+    volumes:
+      - .:/app
+
+networks:
+  app_network:
+    driver: bridge
 
 volumes:
   postgres_data:
-
-networks:
-  backend:
-    driver: bridge
