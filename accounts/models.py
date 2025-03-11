@@ -26,6 +26,13 @@ class CustomUserManager(UserManager):
         return user
 
 
+class Allerge(models.Model):
+    Ingredient = models.CharField(max_length=10)
+
+    def __str__(self):
+        return self.Ingredient
+
+
 class User(AbstractUser):
     ROLE_CHOICES = [
         ("A", "ADMIN"),
@@ -59,7 +66,7 @@ class User(AbstractUser):
     gender = models.CharField(
         choices=GENDER_CHOICES, max_length=1, blank=True, null=True
     )
-    # allergy = 추가 예정
+    allergies = models.ManyToManyField(Allerge, blank=True, through='UserAllerge', related_name='user_allerge')
     # favorite = 추가 예정
 
     # 비공개 필드
@@ -93,3 +100,8 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.email
+
+
+class UserAllerge(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    allerge = models.ForeignKey(Allerge, on_delete=models.PROTECT)
