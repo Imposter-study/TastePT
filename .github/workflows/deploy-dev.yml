@@ -17,9 +17,16 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install dependencies
+      - name: Install Docker Compose
+        run: |
+          sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+          docker-compose --version
+      
+      - name: Build and test Docker container
         run: |
           docker-compose -f docker-compose.yml up -d --build
+          docker-compose exec web python manage.py test
           docker-compose down
 
       - name: Deploy to EC2
