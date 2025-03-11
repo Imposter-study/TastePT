@@ -16,5 +16,5 @@ class Question(models.Model):
 
 
 class Recipe(models.Model):
-    csv_file = models.FileField(upload_to=file_path)
+    csv_file = models.FileField(upload_to='vectors_data/')
     is_embedded = models.BooleanField(default=False)
