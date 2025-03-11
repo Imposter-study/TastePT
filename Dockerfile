@@ -6,6 +6,7 @@ WORKDIR /app
 
 # requirements.txt를 컨테이너로 복사 후, 의존성 패키지 설치
 COPY requirements.txt /app/
+RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
 # 로젝트 파일을 컨테이너의 /app으로 복사
