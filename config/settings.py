@@ -79,6 +79,7 @@ TEMPLATES = [
     },
 ]
 
+CORS_ALLOW_CREDENTIALS = True  # 쿠키 및 인증 정보 허용
 CORS_ALLOWED_ORIGINS = [
     env("LOCAL_FRONT_DOMAIN"),
 ]
@@ -139,6 +140,10 @@ USE_I18N = True
 
 USE_TZ = True
 
+
+# Media files
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
