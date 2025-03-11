@@ -42,4 +42,4 @@ Thumbs.db   # Windows
 .cache/
 
 # server
-/etc/systemd/system/gunicorn.service
+docker-compose.override.yml
