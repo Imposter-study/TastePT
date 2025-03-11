@@ -2,6 +2,7 @@ from django.core.validators import EmailValidator
 from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from .utils import generate_random_nickname
 
 # 커스텀 유효성 검사 정의
 email_validator = EmailValidator(message=_("유효한 이메일 주소를 입력하세요."))
@@ -66,7 +67,9 @@ class User(AbstractUser):
     gender = models.CharField(
         choices=GENDER_CHOICES, max_length=1, blank=True, null=True
     )
-    allergies = models.ManyToManyField(Allerge, blank=True, through='UserAllerge', related_name='user_allerge')
+    allergies = models.ManyToManyField(
+        Allerge, blank=True, through="UserAllerge", related_name="user_allerge"
+    )
     # favorite = 추가 예정
 
     # 비공개 필드
@@ -79,15 +82,10 @@ class User(AbstractUser):
 
     # 디폴트 닉네임 생성
     def generate_default_nickname(self):
-        base_nickname = self.email.split("@")[0]
-        nickname = base_nickname[:30]
+        nickname = generate_random_nickname()
 
-        # 중복 체크 및 숫자 추가
-        original_nickname = nickname
-        counter = 1
         while User.objects.filter(nickname=nickname).exists():
-            nickname = f"{original_nickname}{counter}"
-            counter += 1
+            nickname = generate_random_nickname()
 
         return nickname
 
