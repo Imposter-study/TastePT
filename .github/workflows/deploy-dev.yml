@@ -6,7 +6,7 @@ on:
       - develop
 
 jobs:
-  deploy:
+  CI-CD:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -22,6 +22,9 @@ jobs:
           sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           sudo chmod +x /usr/local/bin/docker-compose
           docker-compose --version
+      
+      - name: create dotenv
+        run: echo "${{ secrets.ENV }}" > .env
       
       - name: Build and test Docker container
         run: |
