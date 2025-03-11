@@ -117,7 +117,7 @@ pyproject_hooks==1.2.0
 pyreadline3==3.5.4
 python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
-pywin32
+pywin32; sys_platform == "win32"
 PyYAML==6.0.2
 pyzmq==26.2.1
 regex==2024.11.6
