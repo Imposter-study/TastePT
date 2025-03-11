@@ -166,5 +166,5 @@ NOUNS = [
 def generate_random_nickname():
     adjective = random.choice(ADJECTIVES)
     noun = random.choice(NOUNS)
-    nickname = f"{adjective}{noun}"
+    nickname = f"{adjective} {noun}"
     return nickname
