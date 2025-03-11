@@ -6,7 +6,7 @@ from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .serializers import SignUpSerializer, ProfileUpdateSerializer
+from .serializers import SignUpSerializer, ProfileUpdateSerializer, PasswordSerializer
 
 
 User = get_user_model()
@@ -82,6 +82,23 @@ class ProfileAPIView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+
+
+class PasswordUpdateAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    # 비밀번호 수정
+    def put(self, request):
+        serializer = PasswordSerializer(data=request.data, context={"request": request})
+
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return Response(
+                {"detail": "비밀번호가 성공적으로 변경되었습니다."},
+                status=status.HTTP_200_OK,
+            )
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class SignInAPIView(APIView):

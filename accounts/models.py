@@ -8,7 +8,7 @@ email_validator = EmailValidator(message=_("유효한 이메일 주소를 입력
 
 
 class CustomUserManager(UserManager):
-    def create_superuser(self, username, password=None, **extra_fields):
+    def create_superuser(self, email, password=None, **extra_fields):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
 
@@ -19,7 +19,18 @@ class CustomUserManager(UserManager):
 
         extra_fields.setdefault("role", "A")
 
-        return self._create_user(username, None, password, **extra_fields)
+        user = self.model(email=email, password=password, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+
+        return user
+
+
+class Allerge(models.Model):
+    Ingredient = models.CharField(max_length=10)
+
+    def __str__(self):
+        return self.Ingredient
 
 
 class User(AbstractUser):
@@ -55,7 +66,7 @@ class User(AbstractUser):
     gender = models.CharField(
         choices=GENDER_CHOICES, max_length=1, blank=True, null=True
     )
-    # allergy = 추가 예정
+    allergies = models.ManyToManyField(Allerge, blank=True, through='UserAllerge', related_name='user_allerge')
     # favorite = 추가 예정
 
     # 비공개 필드
@@ -89,3 +100,8 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.email
+
+
+class UserAllerge(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    allerge = models.ForeignKey(Allerge, on_delete=models.PROTECT)
