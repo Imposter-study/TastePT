@@ -9,8 +9,6 @@ services:
       - .env
     ports:
       - "8000:8000"
-    depends_on:
-      - db
     networks:
       - app_network
     volumes:
