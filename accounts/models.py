@@ -67,9 +67,7 @@ class User(AbstractUser):
     gender = models.CharField(
         choices=GENDER_CHOICES, max_length=1, blank=True, null=True
     )
-    allergies = models.ManyToManyField(
-        Allergy, blank=True, through="UserAllergy", related_name="user_allergy"
-    )
+    allergies = models.ManyToManyField(Allergy, blank=True)
     # favorite = 추가 예정
 
     # 비공개 필드
@@ -98,8 +96,3 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.email
-
-
-class UserAllergy(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    allergy = models.ForeignKey(Allergy, on_delete=models.PROTECT)
