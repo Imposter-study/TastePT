@@ -1,11 +1,15 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from .models import Allergy
 
 User = get_user_model()
 
 
 class SignUpSerializer(serializers.ModelSerializer):
     password_confirm = serializers.CharField(write_only=True)
+    allergies = serializers.ListField(
+        child=serializers.CharField(max_length=10), required=False, write_only=True
+    )
 
     class Meta:
         model = User
@@ -17,6 +21,7 @@ class SignUpSerializer(serializers.ModelSerializer):
             "role",
             "age",
             "gender",
+            "allergies",
         ]
         extra_kwargs = {
             "password": {"write_only": True},
@@ -26,6 +31,7 @@ class SignUpSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         password = validated_data.pop("password", None)
         validated_data.pop("password_confirm", None)
+        allergies_data = validated_data.pop("allergies", [])
 
         instance = self.Meta.model(**validated_data)
 
@@ -33,12 +39,25 @@ class SignUpSerializer(serializers.ModelSerializer):
             instance.set_password(password)
 
         instance.save()
+
+        if allergies_data:
+            for allergy_name in allergies_data:
+                allergy, created = Allergy.objects.get_or_create(
+                    Ingredient=allergy_name
+                )
+                instance.allergies.add(allergy)
+
         return instance
 
     # 출력 데이터를 보여주도록 변환
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         representation["role"] = instance.get_role_display()
+
+        representation["allergies"] = [
+            allergy.Ingredient for allergy in instance.allergies.all()
+        ]
+
         return representation
 
     # 닉네임 검증
