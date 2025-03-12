@@ -9,7 +9,7 @@ COPY requirements.txt /app/
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 로젝트 파일을 컨테이너의 /app으로 복사
+# 프로젝트 파일을 컨테이너의 /app으로 복사
 COPY . /app/
 
 # Django 서버 실행 포트 설정
