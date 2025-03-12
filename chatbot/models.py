@@ -1,10 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.db import models
-from django.conf import settings
-import os
 
-
-file_path = os.path.join(settings.BASE_DIR, "vectors_data")
 
 
 User = get_user_model()
@@ -16,5 +12,5 @@ class Question(models.Model):
 
 
 class Recipe(models.Model):
-    csv_file = models.FileField(upload_to="vectors_data/")
+    csv_file = models.FileField(upload_to="csv_file/")
     is_embedded = models.BooleanField(default=False)

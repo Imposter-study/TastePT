@@ -17,20 +17,11 @@ import os
 
 
 from django.conf import settings
-
-
 from .models import Recipe
 
-secret_key = os.getenv("LANGFUSE_SECRET_KEY")
-public_key = os.getenv("LANGFUSE_PUBLIC_KEY")
-host = os.getenv("host")
-
-
-# Langfuse config 랭퓨즈 설정
-langfuse_config = {"secret_key": secret_key, "public_key": public_key, "host": host}
-
-langfuse = Langfuse(**langfuse_config)
-langfuse_handler = CallbackHandler(**langfuse_config)
+# Langfuse config 설정을 settings에서 가져오기
+langfuse = Langfuse(**settings.LANGFUSE_CONFIG)
+langfuse_handler = CallbackHandler(**settings.LANGFUSE_CONFIG)
 
 
 # 레시피 임베딩 및 백터DB저장

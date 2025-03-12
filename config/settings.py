@@ -167,3 +167,14 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Langfuse 설정
+LANGFUSE_SECRET_KEY = os.getenv("LANGFUSE_SECRET_KEY")
+LANGFUSE_PUBLIC_KEY = os.getenv("LANGFUSE_PUBLIC_KEY")
+LANGFUSE_HOST = os.getenv("host")
+
+LANGFUSE_CONFIG = {
+    "secret_key": LANGFUSE_SECRET_KEY,
+    "public_key": LANGFUSE_PUBLIC_KEY,
+    "host": LANGFUSE_HOST,
+}
