@@ -16,7 +16,9 @@ class TimeStamp(models.Model):
 class Post(TimeStamp):
     title = models.CharField(max_length=64)
     content = models.TextField()
-    author = models.ForeignKey(to=User, on_delete=models.CASCADE, related_name="posts")
+    author = models.ForeignKey(
+        to=User, on_delete=models.SET_NULL, null=True, related_name="posts"
+    )
 
     def __str__(self):
         return self.title
@@ -25,3 +27,14 @@ class Post(TimeStamp):
 class UploadedImage(models.Model):
     image = models.ImageField(upload_to="posts/%Y/%m/%d")  # 업로드 경로 지정
     uploaded_at = models.DateTimeField(auto_now_add=True)
+
+
+class Comment(TimeStamp):
+    content = models.TextField()
+    post = models.ForeignKey(to=Post, on_delete=models.CASCADE, related_name="comments")
+    author = models.ForeignKey(
+        to=User, on_delete=models.SET_NULL, null=True, related_name="comments"
+    )
+
+    def __str__(self):
+        return self.content[:10]
