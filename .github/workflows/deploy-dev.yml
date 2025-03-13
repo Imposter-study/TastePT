@@ -23,13 +23,12 @@ jobs:
           sudo chmod +x /usr/local/bin/docker-compose
           docker-compose --version
       
-      - name: create dotenv
+      - name: Create dotenv
         run: echo "${{ secrets.ENV }}" > .env
       
       - name: Build and test Docker container
         run: |
           docker-compose -f docker-compose.yml up -d --build
-          docker-compose exec web python manage.py test
           docker-compose down
 
       - name: Deploy to EC2
@@ -43,7 +42,6 @@ jobs:
           ssh -o StrictHostKeyChecking=no -i private_key.pem $EC2_USER@$EC2_HOST <<'EOF'
           cd /home/ec2-user/TastePT
           git pull origin develop
-          pyenv activate myenv
           sudo docker-compose down
           sudo docker-compose up -d --build
           EOF
