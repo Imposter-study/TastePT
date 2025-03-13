@@ -34,8 +34,6 @@ DEBUG = env("DEBUG")
 
 ALLOWED_HOSTS = env("ALLOWED_HOSTS").split(",")
 
-CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS").split(",")
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -84,9 +82,18 @@ TEMPLATES = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True  # 쿠키 및 인증 정보 허용
+
+CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS").split(",")
+
 CORS_ALLOWED_ORIGINS = [
     env("LOCAL_FRONT_DOMAIN"),
 ]
+
+CSRF_COOKIE_SAMESITE = 'None'
+CSRF_COOKIE_SECURE = True
+
+SESSION_COOKIE_SAMESITE = 'None'
+SESSION_COOKIE_SECURE = True
 
 AUTH_USER_MODEL = "accounts.User"
 
