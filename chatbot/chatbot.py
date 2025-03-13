@@ -49,12 +49,14 @@ class VectorStoreManager:
             persist_directory=persist_directory,
             embedding_function=OpenAIEmbeddings(model="text-embedding-ada-002"),
         )
+        self.retriever = self.db.as_retriever()
         print(" Vector Store is ready!")
 
-    # 캐싱을 통해 비슷한 음식 추천을 빠르게
+    
     @functools.lru_cache(maxsize=100)
-    def get_db(self):
-        return self.db
+    def get_retriever(self):
+        with self._lock: 
+            return self.retriever 
 
     def add_file(self):
         csv_files = Recipe.objects.filter(is_embedded=False)
@@ -102,7 +104,7 @@ class Chatbot_Run:
         self.llm = ChatOpenAI(model_name="gpt-4o-mini", temperature=0)
 
         # 벡터 DB의 Retriever 불러오기
-        self.retriever = VectorStoreManager().get_db().as_retriever()
+        self.retriever = VectorStoreManager().get_retriever()
         print(type(self.retriever))
         # 프롬프트 불러오기
         langfuse_prompt = langfuse.get_prompt("TastePT")
