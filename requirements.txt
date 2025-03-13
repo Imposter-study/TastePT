@@ -39,7 +39,7 @@ google-auth==2.38.0
 googleapis-common-protos==1.69.0
 greenlet==3.1.1
 grpcio==1.70.0
-gunicorn>=20.1.0
+gunicorn==23.0.0
 h11==0.14.0
 httpcore==1.0.7
 httptools==0.6.4
@@ -97,6 +97,7 @@ overrides==7.7.0
 packaging==24.2
 parso==0.8.4
 pathspec==0.12.1
+pexpect==4.9.0
 pillow==11.1.0
 platformdirs==4.3.6
 posthog==3.18.1
@@ -107,6 +108,7 @@ psutil==7.0.0
 psycopg==3.2.5
 psycopg-binary==3.2.5
 psycopg2==2.9.10
+ptyprocess==0.7.0
 pure_eval==0.2.3
 pyasn1==0.6.1
 pyasn1_modules==0.4.1
@@ -149,6 +151,7 @@ typing_extensions==4.12.2
 tzdata==2025.1
 urllib3==2.3.0
 uvicorn==0.34.0
+uvloop==0.21.0
 watchfiles==1.0.4
 wcwidth==0.2.13
 websocket-client==1.8.0
