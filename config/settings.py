@@ -86,6 +86,16 @@ CORS_ALLOWED_ORIGINS = [
     env("LOCAL_FRONT_DOMAIN"),
 ]
 
+# CSRF 설정
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_SAMESITE = 'None'
+CSRF_COOKIE_HTTPONLY = False
+CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS").split(",")
+
+# 세션 설정
+SESSION_COOKIE_SAMESITE = 'None'
+SESSION_COOKIE_SECURE = True
+
 AUTH_USER_MODEL = "accounts.User"
 
 WSGI_APPLICATION = "config.wsgi.application"
@@ -170,3 +180,14 @@ else:
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Langfuse 설정
+LANGFUSE_SECRET_KEY = os.getenv("LANGFUSE_SECRET_KEY")
+LANGFUSE_PUBLIC_KEY = os.getenv("LANGFUSE_PUBLIC_KEY")
+LANGFUSE_HOST = os.getenv("host")
+
+LANGFUSE_CONFIG = {
+    "secret_key": LANGFUSE_SECRET_KEY,
+    "public_key": LANGFUSE_PUBLIC_KEY,
+    "host": LANGFUSE_HOST,
+}

@@ -1,6 +1,7 @@
 # Custom
 .env
 envs/
+vectors_data/
 
 # venv
 .venv/
