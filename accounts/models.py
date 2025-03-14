@@ -43,6 +43,14 @@ class User(AbstractUser):
 
     GENDER_CHOICES = [("M", "남자"), ("F", "여자")]
 
+    PREFERRED_CUSINE = [
+        ("K", "한식"),
+        ("J", "일식"),
+        ("C", "중식"),
+        ("W", "양식"),
+        ("B", "비건"),
+    ]
+
     # 비활성화 필드
     username = None
     first_name = None
@@ -68,7 +76,13 @@ class User(AbstractUser):
         choices=GENDER_CHOICES, max_length=1, blank=True, null=True
     )
     allergies = models.ManyToManyField(Allergy, blank=True)
-    # favorite = 추가 예정
+    preferred_cuisine = models.CharField(
+        choices=PREFERRED_CUSINE, max_length=1, blank=True, null=True
+    )
+    diet = models.BooleanField(default=False)
+    profile_picture = models.ImageField(
+        upload_to="profile_picture/", null=True, blank=True
+    )
 
     # 비공개 필드
     role = models.CharField(choices=ROLE_CHOICES, max_length=1, default="U")
