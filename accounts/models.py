@@ -26,12 +26,17 @@ class CustomUserManager(UserManager):
 
         return user
 
+class PreferredCuisine(models.Model):
+    cuisine = models.CharField(max_length=10)
+    
+    def __str__(self):
+        return self.cuisine
 
 class Allergy(models.Model):
-    Ingredient = models.CharField(max_length=10)
+    ingredient = models.CharField(max_length=10)
 
     def __str__(self):
-        return self.Ingredient
+        return self.ingredient
 
 
 class User(AbstractUser):
@@ -42,14 +47,6 @@ class User(AbstractUser):
     ]
 
     GENDER_CHOICES = [("M", "남자"), ("F", "여자")]
-
-    PREFERRED_CUSINE = [
-        ("K", "한식"),
-        ("J", "일식"),
-        ("C", "중식"),
-        ("W", "양식"),
-        ("B", "비건"),
-    ]
 
     # 비활성화 필드
     username = None
@@ -76,9 +73,7 @@ class User(AbstractUser):
         choices=GENDER_CHOICES, max_length=1, blank=True, null=True
     )
     allergies = models.ManyToManyField(Allergy, blank=True)
-    preferred_cuisine = models.CharField(
-        choices=PREFERRED_CUSINE, max_length=1, blank=True, null=True
-    )
+    preferred_cuisine = models.ManyToManyField(PreferredCuisine, blank=True)
     diet = models.BooleanField(default=False)
     profile_picture = models.ImageField(
         upload_to="profile_picture/", null=True, blank=True
