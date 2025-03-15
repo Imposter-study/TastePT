@@ -6,7 +6,12 @@ from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .serializers import SignUpSerializer, ProfileUpdateSerializer, PasswordSerializer
+from .serializers import (
+    SignUpSerializer,
+    ProfileUpdateSerializer,
+    PasswordSerializer,
+    UserSerializer,
+)
 
 
 User = get_user_model()
@@ -71,17 +76,9 @@ class ProfileAPIView(APIView):
     def get(self, request, nickname):
 
         user = self.get_object(nickname)
+        serializer = UserSerializer(user)
 
-        return Response(
-            {
-                "nickname": user.nickname,
-                "age": user.age,
-                "gender": user.gender,
-                # "allergy": 예정
-                # "favorite": 예정
-            },
-            status=status.HTTP_200_OK,
-        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class PasswordUpdateAPIView(APIView):
