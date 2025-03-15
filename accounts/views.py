@@ -6,12 +6,17 @@ from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.generics import ListAPIView
+from .models import Allergy,PreferredCuisine
 from .serializers import (
     SignUpSerializer,
     ProfileUpdateSerializer,
     PasswordSerializer,
     UserSerializer,
+    AllergySerializer,
+    PreferredCuisineSerializer,
 )
+
 
 
 User = get_user_model()
@@ -133,3 +138,13 @@ class SignOutAPIView(APIView):
             {"detail": "로그아웃 성공"},
             status=status.HTTP_200_OK,
         )
+
+class AllergiesListAPIView(ListAPIView):
+
+    queryset =  Allergy.objects.all()
+    serializer_class = AllergySerializer
+
+class PreferredCuisineListAPIView(ListAPIView):
+
+    queryset = PreferredCuisine.objects.all()
+    serializer_class = PreferredCuisineSerializer
