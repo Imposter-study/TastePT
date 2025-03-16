@@ -43,6 +43,8 @@ class SignUpSerializer(serializers.ModelSerializer):
 
         if password is not None:
             instance.set_password(password)
+            
+        instance.save()
 
         if allergies_data:
             # 존재하는 알러지만 가져오기
@@ -64,13 +66,13 @@ class SignUpSerializer(serializers.ModelSerializer):
                 )
 
             # 유저의 알러지 설정
-            instance.allergies.set(existing_allergies)
+            instance.allergies.add(*existing_allergies)
         
         if preferred_cuisine_data:
-            # 존재하는 음식식만 가져오기
+            # 존재하는 음식만 가져오기
             existing_cuisines = PreferredCuisine.objects.filter(cuisine__in=preferred_cuisine_data)
 
-            # 존재하는 음식식을 집합으로 변환
+            # 존재하는 음식을 집합으로 변환
             found_cuisines = set(
                 existing_cuisines.values_list("cuisine", flat=True)
             )
@@ -79,15 +81,15 @@ class SignUpSerializer(serializers.ModelSerializer):
             # 존재하지 않는 음식
             missing_cuisines = requested_cuisines - found_cuisines 
 
-            # 존재하지 않는 음식식가 있으면 오류 반환
+            # 존재하지 않는 음식가 있으면 오류 반환
             if missing_cuisines:
                 raise serializers.ValidationError(
                     {"preferred_cuisine": f"잘못된 선호호음식 입력 :{', '.join(missing_cuisines)}"}
                 )
 
             # 유저의 선호음식
-            instance.preferred_cuisine.set(existing_cuisines)
-        instance.save()
+            instance.preferred_cuisine.add(*existing_cuisines)
+        
 
         return instance
 
