@@ -21,7 +21,7 @@ class PostViewSet(ModelViewSet):
         Prefetch("comments", queryset=Comment.objects.order_by("-created_at"))
     )
     serializer_class = PostSerializer
-    # permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
+    permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
 
     @action(detail=True, methods=["post"])
     def comment(self, request, pk=None):
@@ -30,14 +30,12 @@ class PostViewSet(ModelViewSet):
         serializer = CommentSerializer(data=request.data)
         if serializer.is_valid():
             user = request.user
-            user = User.objects.get(id=1)  # 프론트 테스트용 사용자 지정
             serializer.save(post=post, author=user)
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
 
     def perform_create(self, serializer):
         user = self.request.user
-        user = User.objects.get(id=1)
         # 게시글 생성 시 요청한 사용자를 게시글 작성자로 할당
         serializer.save(author=user)
 
@@ -59,4 +57,4 @@ class CommentUpdateDeleteView(generics.UpdateAPIView, generics.DestroyAPIView):
 
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    # permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
+    permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
