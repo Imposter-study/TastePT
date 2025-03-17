@@ -151,19 +151,18 @@ class PreferredCuisineListAPIView(ListAPIView):
     serializer_class = PreferredCuisineSerializer
 
 
-class CreateRamdonNicknameAPIView(APIView):
+class CreateRandomNicknameAPIView(APIView):
     def get(self, request):
         prefix_query = NicknamePrefix.objects.all()
         suffix_query = NicknameSuffix.objects.all()
 
-        prefix = prefix_query.order_by('?').first()
-        suffix = suffix_query.order_by('?').first()
+        prefix = prefix_query.order_by("?").first()
+        suffix = suffix_query.order_by("?").first()
 
-        nickname = f"{prefix.word}{suffix.word}"
+        nickname = f"{prefix.word} {suffix.word}"
 
         return Response(
             {
-                "detail": "로그인 성공",
                 "nickname": nickname,
             },
             status=status.HTTP_200_OK,

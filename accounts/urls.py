@@ -8,6 +8,6 @@ urlpatterns = [
     path("password/", views.PasswordUpdateAPIView.as_view()),
     path("allergies_list/", views.AllergiesListAPIView.as_view()),
     path("preferredCuisine_list/", views.PreferredCuisineListAPIView.as_view()),
-    path("random_nickname/", views.AllergiesListAPIView.as_view()),
+    path("random_nickname/", views.CreateRandomNicknameAPIView.as_view()),
     path("<str:nickname>/", views.ProfileAPIView.as_view()),
 ]
