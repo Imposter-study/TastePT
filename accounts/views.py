@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView
-from .models import Allergy, PreferredCuisine
+from .models import Allergy, PreferredCuisine, NicknamePrefix, NicknameSuffix
 from .serializers import (
     SignUpSerializer,
     ProfileUpdateSerializer,
@@ -149,3 +149,22 @@ class PreferredCuisineListAPIView(ListAPIView):
 
     queryset = PreferredCuisine.objects.all()
     serializer_class = PreferredCuisineSerializer
+
+
+class CreateRamdonNicknameAPIView(APIView):
+    def get(self, request):
+        prefix_query = NicknamePrefix.objects.all()
+        suffix_query = NicknameSuffix.objects.all()
+
+        prefix = prefix_query.order_by('?').first()
+        suffix = suffix_query.order_by('?').first()
+
+        nickname = f"{prefix.word}{suffix.word}"
+
+        return Response(
+            {
+                "detail": "로그인 성공",
+                "nickname": nickname,
+            },
+            status=status.HTTP_200_OK,
+        )
