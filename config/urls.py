@@ -21,11 +21,15 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/v1/accounts/", include("accounts.urls")),
     path("api/v1/chatbot/", include("chatbot.urls")),
     path("api/v1/community/", include("community.urls")),
+    path('api/v1/schema/', SpectacularAPIView.as_view(), name='schema'), # swagger-ui 참조 데이터
+    path('api/v1/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'), # 실제 swagger url
 ]
 
 # 개발 환경에서만 media 파일 서빙

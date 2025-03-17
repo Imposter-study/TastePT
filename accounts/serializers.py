@@ -283,3 +283,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_preferred_cuisine(self, obj):
         return obj.preferred_cuisine.values_list("cuisine", flat=True)
+
+
+# class ExampleSerializer(serializers.Serializer):
+#     message = serializers.CharField()
