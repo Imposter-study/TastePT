@@ -52,11 +52,10 @@ class VectorStoreManager:
         self.retriever = self.db.as_retriever()
         print(" Vector Store is ready!")
 
-    
     @functools.lru_cache(maxsize=100)
     def get_retriever(self):
-        with self._lock: 
-            return self.retriever 
+        with self._lock:
+            return self.retriever
 
     def add_file(self):
         csv_files = Recipe.objects.filter(is_embedded=False)

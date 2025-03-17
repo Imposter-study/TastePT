@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import Allergy,PreferredCuisine
+from .models import Allergy, PreferredCuisine
 
 User = get_user_model()
 
@@ -26,7 +26,7 @@ class SignUpSerializer(serializers.ModelSerializer):
             "gender",
             "allergies",
             "preferred_cuisine",
-            "diet"
+            "diet",
         ]
         extra_kwargs = {
             "password": {"write_only": True},
@@ -43,7 +43,7 @@ class SignUpSerializer(serializers.ModelSerializer):
 
         if password is not None:
             instance.set_password(password)
-            
+
         instance.save()
 
         if allergies_data:
@@ -67,29 +67,30 @@ class SignUpSerializer(serializers.ModelSerializer):
 
             # 유저의 알러지 설정
             instance.allergies.add(*existing_allergies)
-        
+
         if preferred_cuisine_data:
             # 존재하는 음식만 가져오기
-            existing_cuisines = PreferredCuisine.objects.filter(cuisine__in=preferred_cuisine_data)
+            existing_cuisines = PreferredCuisine.objects.filter(
+                cuisine__in=preferred_cuisine_data
+            )
 
             # 존재하는 음식을 집합으로 변환
-            found_cuisines = set(
-                existing_cuisines.values_list("cuisine", flat=True)
-            )
+            found_cuisines = set(existing_cuisines.values_list("cuisine", flat=True))
             requested_cuisines = set(preferred_cuisine_data)
 
             # 존재하지 않는 음식
-            missing_cuisines = requested_cuisines - found_cuisines 
+            missing_cuisines = requested_cuisines - found_cuisines
 
             # 존재하지 않는 음식가 있으면 오류 반환
             if missing_cuisines:
                 raise serializers.ValidationError(
-                    {"preferred_cuisine": f"잘못된 선호호음식 입력 :{', '.join(missing_cuisines)}"}
+                    {
+                        "preferred_cuisine": f"잘못된 선호호음식 입력 :{', '.join(missing_cuisines)}"
+                    }
                 )
 
             # 유저의 선호음식
             instance.preferred_cuisine.add(*existing_cuisines)
-        
 
         return instance
 
@@ -102,7 +103,8 @@ class SignUpSerializer(serializers.ModelSerializer):
             allergy.ingredient for allergy in instance.allergies.all()
         ]
         representation["preferred_cuisine"] = [
-            preferred_cuisine.cuisine for preferred_cuisine in instance.preferred_cuisine.all()
+            preferred_cuisine.cuisine
+            for preferred_cuisine in instance.preferred_cuisine.all()
         ]
 
         return representation
@@ -138,6 +140,7 @@ class PreferredCuisineSerializer(serializers.ModelSerializer):
         model = PreferredCuisine
         fields = ["id", "cuisine"]
 
+
 class AllergySerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -146,7 +149,6 @@ class AllergySerializer(serializers.ModelSerializer):
 
 
 class ProfileUpdateSerializer(SignUpSerializer):
-    
 
     class Meta(SignUpSerializer.Meta):
         fields = [
@@ -188,20 +190,24 @@ class ProfileUpdateSerializer(SignUpSerializer):
                 )
             # 기존 알러지를 새로운 값으로 교체
             instance.allergies.set(existing_allergies)
-        
+
         if "preferred_cuisine" in validated_data:
             cuisine_names = validated_data.pop("preferred_cuisine", [])
-            
+
             # 존재하는 음식만 가져오기
-            existing_cuisines = PreferredCuisine.objects.filter(cuisine__in=cuisine_names)
+            existing_cuisines = PreferredCuisine.objects.filter(
+                cuisine__in=cuisine_names
+            )
             found_cuisines = set(existing_cuisines.values_list("cuisine", flat=True))
             requested_cuisines = set(cuisine_names)
-            
+
             # 존재하지 않는 값 확인
             missing_cuisines = requested_cuisines - found_cuisines
             if missing_cuisines:
                 raise serializers.ValidationError(
-                    {"preferred_cuisine": f"잘못된 선호음식 입력: {','.join(missing_cuisines)}"}
+                    {
+                        "preferred_cuisine": f"잘못된 선호음식 입력: {','.join(missing_cuisines)}"
+                    }
                 )
 
             # 기존 값 대체
@@ -212,8 +218,6 @@ class ProfileUpdateSerializer(SignUpSerializer):
 
         instance.save()
         return instance
-
-
 
 
 class PasswordSerializer(serializers.Serializer):
@@ -276,6 +280,6 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_allergies(self, obj):
         return obj.allergies.values_list("ingredient", flat=True)
-    
+
     def get_preferred_cuisine(self, obj):
         return obj.preferred_cuisine.values_list("cuisine", flat=True)
