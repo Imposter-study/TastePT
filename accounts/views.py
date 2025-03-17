@@ -6,7 +6,16 @@ from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .serializers import SignUpSerializer, ProfileUpdateSerializer, PasswordSerializer
+from rest_framework.generics import ListAPIView
+from .models import Allergy, PreferredCuisine, NicknamePrefix, NicknameSuffix
+from .serializers import (
+    SignUpSerializer,
+    ProfileUpdateSerializer,
+    PasswordSerializer,
+    UserSerializer,
+    AllergySerializer,
+    PreferredCuisineSerializer,
+)
 
 
 User = get_user_model()
@@ -71,17 +80,9 @@ class ProfileAPIView(APIView):
     def get(self, request, nickname):
 
         user = self.get_object(nickname)
+        serializer = UserSerializer(user)
 
-        return Response(
-            {
-                "nickname": user.nickname,
-                "age": user.age,
-                "gender": user.gender,
-                # "allergy": 예정
-                # "favorite": 예정
-            },
-            status=status.HTTP_200_OK,
-        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class PasswordUpdateAPIView(APIView):
@@ -134,5 +135,35 @@ class SignOutAPIView(APIView):
 
         return Response(
             {"detail": "로그아웃 성공"},
+            status=status.HTTP_200_OK,
+        )
+
+
+class AllergiesListAPIView(ListAPIView):
+
+    queryset = Allergy.objects.all()
+    serializer_class = AllergySerializer
+
+
+class PreferredCuisineListAPIView(ListAPIView):
+
+    queryset = PreferredCuisine.objects.all()
+    serializer_class = PreferredCuisineSerializer
+
+
+class CreateRandomNicknameAPIView(APIView):
+    def get(self, request):
+        prefix_query = NicknamePrefix.objects.all()
+        suffix_query = NicknameSuffix.objects.all()
+
+        prefix = prefix_query.order_by("?").first()
+        suffix = suffix_query.order_by("?").first()
+
+        nickname = f"{prefix.word} {suffix.word}"
+
+        return Response(
+            {
+                "nickname": nickname,
+            },
             status=status.HTTP_200_OK,
         )
