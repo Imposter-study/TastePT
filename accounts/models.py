@@ -26,11 +26,13 @@ class CustomUserManager(UserManager):
 
         return user
 
+
 class PreferredCuisine(models.Model):
     cuisine = models.CharField(max_length=10)
-    
+
     def __str__(self):
         return self.cuisine
+
 
 class Allergy(models.Model):
     ingredient = models.CharField(max_length=10)
