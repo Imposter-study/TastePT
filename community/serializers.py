@@ -8,7 +8,12 @@ User = get_user_model()
 class AuthorSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "email", "nickname"]
+        fields = [
+            "id",
+            "email",
+            "nickname",
+            "profile_picture",
+        ]
 
 
 class CommentSerializer(serializers.ModelSerializer):
