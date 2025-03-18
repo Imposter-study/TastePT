@@ -83,9 +83,7 @@ TEMPLATES = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True  # 쿠키 및 인증 정보 허용
-CORS_ALLOWED_ORIGINS = [
-    env("LOCAL_FRONT_DOMAIN"),
-]
+CORS_ALLOWED_ORIGINS = env("FRONT_DOMAIN").split(",")
 
 # CSRF 설정
 CSRF_COOKIE_SECURE = True
