@@ -9,5 +9,6 @@ urlpatterns = [
     path("allergies_list/", views.AllergiesListAPIView.as_view()),
     path("preferredCuisine_list/", views.PreferredCuisineListAPIView.as_view()),
     path("random_nickname/", views.CreateRandomNicknameAPIView.as_view()),
+    path("auth-check/", views.check_signin_view),
     path("<str:nickname>/", views.ProfileAPIView.as_view()),
 ]

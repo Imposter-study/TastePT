@@ -8,6 +8,7 @@ User = get_user_model()
 class Question(models.Model):
     question = models.CharField(max_length=50)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    
 
 
 class Recipe(models.Model):
