@@ -13,6 +13,7 @@ from langfuse.callback import CallbackHandler
 
 from threading import Lock
 import functools
+
 import os
 
 
@@ -115,12 +116,23 @@ class Chatbot_Run:
 
         # RAG Chain 생성
         self.rag_chain = (
-            {"recipes": self.retriever | format_docs, "question": RunnablePassthrough()}
+            {
+                "recipes": self.retriever | format_docs,
+                "question": RunnablePassthrough(),
+                "user_data": RunnablePassthrough(),
+            }
             | self.prompt
             | self.llm
             | StrOutputParser()
         )
 
     # 질문을 받아 응답 생성
-    def ask(self, query: str):
-        return self.rag_chain.invoke(query, config={"callbacks": [langfuse_handler]})
+    def ask(self, query: str, user_data):
+
+        input_data = {"question": query, "user_data": user_data}
+        # str으로 변환환
+        input_data_str = str(input_data)
+
+        return self.rag_chain.invoke(
+            input_data_str, config={"callbacks": [langfuse_handler]}
+        )

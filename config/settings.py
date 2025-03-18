@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     # third-party
     "rest_framework",
     "corsheaders",
+    "drf_spectacular",
     # apps
     "accounts",
     "chatbot",
@@ -82,9 +83,7 @@ TEMPLATES = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True  # 쿠키 및 인증 정보 허용
-CORS_ALLOWED_ORIGINS = [
-    env("LOCAL_FRONT_DOMAIN"),
-]
+CORS_ALLOWED_ORIGINS = env("FRONT_DOMAIN").split(",")
 
 # CSRF 설정
 CSRF_COOKIE_SECURE = True
@@ -106,6 +105,7 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.SessionAuthentication",
         "rest_framework.authentication.BasicAuthentication",
     ),
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 # Database
