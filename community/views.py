@@ -10,6 +10,7 @@ from rest_framework import status, generics
 from .models import Post, Comment
 from .permissions import IsAuthorOrReadOnly
 from .serializers import PostSerializer, ImageUploadSerializer, CommentSerializer
+from .pagenations import PostPageNumberPagination
 
 User = get_user_model()
 
@@ -22,6 +23,7 @@ class PostViewSet(ModelViewSet):
     )
     serializer_class = PostSerializer
     permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
+    pagination_class = PostPageNumberPagination
 
     @action(detail=True, methods=["post"])
     def comment(self, request, pk=None):
