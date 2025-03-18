@@ -36,6 +36,9 @@ class Comment(TimeStamp):
     author = models.ForeignKey(
         to=User, on_delete=models.SET_NULL, null=True, related_name="comments"
     )
+    parent = models.ForeignKey(
+        to="self", on_delete=models.CASCADE, null=True, related_name="reply_comments"
+    )
 
     def __str__(self):
         return self.content[:10]
