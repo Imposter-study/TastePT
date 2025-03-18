@@ -28,7 +28,9 @@ class CommentSerializer(serializers.ModelSerializer):
     def get_reply_comments(self, instance):
         # 부모 댓글만 reply_comments를 포함하도록 처리
         if instance.parent is None:
-            reply_comments = Comment.objects.filter(parent=instance)
+            reply_comments = Comment.objects.filter(parent=instance).order_by(
+                "-created_at"
+            )
             serializer = CommentSerializer(reply_comments, many=True)
             return serializer.data
         return []  # 자식 댓글은 빈 배열로 반환

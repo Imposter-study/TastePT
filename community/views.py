@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.db.models import Prefetch
+from django.db.models import Q
 from django.shortcuts import render, get_object_or_404
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
@@ -10,6 +11,7 @@ from rest_framework import status, generics
 from .models import Post, Comment
 from .permissions import IsAuthorOrReadOnly
 from .serializers import PostSerializer, ImageUploadSerializer, CommentSerializer
+from .pagenations import PostPageNumberPagination
 
 User = get_user_model()
 
@@ -22,6 +24,7 @@ class PostViewSet(ModelViewSet):
     )
     serializer_class = PostSerializer
     permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
+    pagination_class = PostPageNumberPagination
 
     @action(detail=True, methods=["post"])
     def comment(self, request, pk=None):
@@ -38,6 +41,15 @@ class PostViewSet(ModelViewSet):
         user = self.request.user
         # 게시글 생성 시 요청한 사용자를 게시글 작성자로 할당
         serializer.save(author=user)
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        search_query = self.request.query_params.get("search", None)
+        if search_query:
+            queryset = queryset.filter(
+                Q(title__icontains=search_query) | Q(content__icontains=search_query)
+            )
+        return queryset
 
 
 class ImageUploadView(APIView):
