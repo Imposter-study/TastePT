@@ -1,38 +1,42 @@
-from django.contrib.auth import get_user_model
-
-from rest_framework import status
-from rest_framework.views import APIView
-from rest_framework.response import Response
-
-from accounts.serializers import UserSerializer
-from .serializers import ChatbotSerializer
+from ninja import NinjaAPI, Schema
 from .chatbot import Chatbot_Run, VectorStoreManager
 from .models import Question
+from accounts.serializers import UserSerializer
 
-User = get_user_model()
+
+api = NinjaAPI()
 
 
-class ChatbotAPIView(APIView):
+class ChatbotRequestSchema(Schema):
+    question: str
 
-    def post(self, request):
-        if not request.user.is_authenticated:
-            return Response(
-                {"detail": "로그인을 해주세요."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
 
-        user = request.user
-        serializer = ChatbotSerializer(data=request.data)
-        user_data = UserSerializer(user).data
+class ChatbotResponseSchema(Schema):
+    answer: str
 
-        if serializer.is_valid():
-            question = serializer.validated_data["question"]
 
-            Question.objects.create(question=question, created_by=user)
-            VectorStoreManager().add_file()
+class ErrorSchema(Schema):
+    detail: str
 
-            chatbot = Chatbot_Run()
-            response = chatbot.ask(question, str(user_data))
 
-            return Response({"answer": response}, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+@api.post("", response={200: ChatbotResponseSchema, 400: ErrorSchema})
+def chatbot_endpoint(request, payload: ChatbotRequestSchema):
+
+    # 사용자 인증 확인
+    if not request.user.is_authenticated:
+        return 400, {"detail": "로그인을 해주세요."}
+
+    user = request.user
+    user_data = UserSerializer(user).data
+
+    question = payload.question
+    Question.objects.create(question=question, created_by=user)
+
+    # 벡터 저장소에 파일 추가
+    VectorStoreManager().add_file()
+
+    # 챗봇을 통해 응답 생성
+    chatbot = Chatbot_Run()
+    response = chatbot.ask(question, str(user_data))
+
+    return 200, {"answer": response}
