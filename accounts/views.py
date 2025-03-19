@@ -25,18 +25,14 @@ User = get_user_model()
 class UserAPIView(APIView):
     # 회원가입
     @extend_schema(
-        tags=['회원'],
+        tags=["회원"],
         summary="회원가입",
         description="회원가입 API, 비회원이 회원가입을 진행합니다.",
         request=UserSerializer,
         responses={
-            201: OpenApiResponse(
-                description="회원 가입 완료, 유저 생성"
-            ),
-            400: OpenApiResponse(
-                description="email, password 입력값이 잘못된 경우"
-            ),
-        }
+            201: OpenApiResponse(description="회원 가입 완료, 유저 생성"),
+            400: OpenApiResponse(description="email, password 입력값이 잘못된 경우"),
+        },
     )
     def post(self, request):
         serializer = SignUpSerializer(data=request.data)
