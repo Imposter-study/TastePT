@@ -122,6 +122,33 @@ DATABASES = {
     }
 }
 
+# Redis 설정
+REDIS_HOST = env("REDIS_HOST")
+REDIS_PASSWORD = env("REDIS_PASSWORD")
+
+if REDIS_PASSWORD:
+    REDIS_URL = f"redis://:{REDIS_PASSWORD}@{REDIS_HOST}:6379/0"
+else:
+    REDIS_URL = f"redis://{REDIS_HOST}:6379/0"
+
+# Cache 설정
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": REDIS_URL,
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        },
+    }
+}
+
+if env("CI") == "true":
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        }
+    }
+
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
