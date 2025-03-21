@@ -28,8 +28,14 @@ urlpatterns = [
     path("api/v1/accounts/", include("accounts.urls")),
     path("api/v1/chatbot/", api.urls),
     path("api/v1/community/", include("community.urls")),
-    path('api/v1/schema/', SpectacularAPIView.as_view(), name='schema'), # swagger-ui 참조 데이터
-    path('api/v1/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'), # 실제 swagger url
+    path(
+        "api/v1/schema/", SpectacularAPIView.as_view(), name="schema"
+    ),  # swagger-ui 참조 데이터
+    path(
+        "api/v1/schema/swagger-ui/",
+        SpectacularSwaggerView.as_view(url_name="schema"),
+        name="swagger-ui",
+    ),  # 실제 swagger url
 ]
 
 # 개발 환경에서만 media 파일 서빙
