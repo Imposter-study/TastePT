@@ -7,13 +7,12 @@ from langchain_chroma import Chroma
 from langchain_community.document_loaders.csv_loader import CSVLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
+
 # Langfuse(챗봇 트레이싱 및 운영툴)
 from langfuse import Langfuse
 from langfuse.callback import CallbackHandler
 
 from threading import Lock
-import functools
-
 import os
 
 
@@ -49,11 +48,15 @@ class VectorStoreManager:
         self.db = Chroma(
             persist_directory=persist_directory,
             embedding_function=OpenAIEmbeddings(model="text-embedding-ada-002"),
+            collection_metadata={"hnsw:space": "cosine"},
         )
-        self.retriever = self.db.as_retriever()
+        self.retriever = self.db.as_retriever(
+            search_type="mmr",
+            search_kwargs={"k": 5, "fetch_k": 20, "lambda_mult": 0.9},
+        )
+
         print(" Vector Store is ready!")
 
-    @functools.lru_cache(maxsize=100)
     def get_retriever(self):
         with self._lock:
             return self.retriever
@@ -91,21 +94,13 @@ class VectorStoreManager:
             file_obj.save()
 
 
-# 문맥 유지를 위한 함수
-def format_docs(docs):
-    return "\n\n".join(doc.page_content for doc in docs)
-
-
 class Chatbot_Run:
     def __init__(self):
         print("Initializing RAGManager...")
 
         # LLM 설정
-        self.llm = ChatOpenAI(model_name="gpt-4o-mini", temperature=0)
+        self.llm = ChatOpenAI(model_name="gpt-4o-mini", temperature=0.1)
 
-        # 벡터 DB의 Retriever 불러오기
-        self.retriever = VectorStoreManager().get_retriever()
-        print(type(self.retriever))
         # 프롬프트 불러오기
         langfuse_prompt = langfuse.get_prompt("TastePT")
 
@@ -113,11 +108,13 @@ class Chatbot_Run:
             langfuse_prompt.get_langchain_prompt(),
             metadata={"langfuse_prompt": langfuse_prompt},
         )
+        self.db = VectorStoreManager()
+        self.retriever = self.db.get_retriever()
 
         # RAG Chain 생성
         self.rag_chain = (
             {
-                "recipes": self.retriever | format_docs,
+                "recipes": self.retriever,
                 "question": RunnablePassthrough(),
                 "user_data": RunnablePassthrough(),
             }
@@ -127,12 +124,17 @@ class Chatbot_Run:
         )
 
     # 질문을 받아 응답 생성
-    def ask(self, query: str, user_data):
-
-        input_data = {"question": query, "user_data": user_data}
-        # str으로 변환환
+    async def ask(self, query: str, user_data):
+        # MMR로 문서 검색 후 BM25 기반 리랭킹
+        mmr_recipes = self.retriever.invoke(query)
+        input_data = {
+            "recipes": mmr_recipes,
+            "question": query,
+            "user_data": user_data,
+        }
+        # str으로 변환
         input_data_str = str(input_data)
 
-        return self.rag_chain.invoke(
+        return await self.rag_chain.ainvoke(
             input_data_str, config={"callbacks": [langfuse_handler]}
         )
