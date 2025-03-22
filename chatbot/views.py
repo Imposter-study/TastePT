@@ -1,38 +1,66 @@
-from django.contrib.auth import get_user_model
-
-from rest_framework import status
-from rest_framework.views import APIView
-from rest_framework.response import Response
-
-from accounts.serializers import UserSerializer
-from .serializers import ChatbotSerializer
+from ninja import NinjaAPI, Schema
 from .chatbot import Chatbot_Run, VectorStoreManager
 from .models import Question
+from accounts.serializers import UserSerializer
+import asyncio
+from asgiref.sync import sync_to_async
 
-User = get_user_model()
+api = NinjaAPI()
 
 
-class ChatbotAPIView(APIView):
+class ChatbotRequestSchema(Schema):
+    question: str
 
-    def post(self, request):
-        if not request.user.is_authenticated:
-            return Response(
-                {"detail": "로그인을 해주세요."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
 
-        user = request.user
-        serializer = ChatbotSerializer(data=request.data)
-        user_data = UserSerializer(user).data
+class ChatbotResponseSchema(Schema):
+    answer: str
 
-        if serializer.is_valid():
-            question = serializer.validated_data["question"]
 
-            Question.objects.create(question=question, created_by=user)
-            VectorStoreManager().add_file()
+class ErrorSchema(Schema):
+    detail: str
 
-            chatbot = Chatbot_Run()
-            response = chatbot.ask(question, str(user_data))
 
-            return Response({"answer": response}, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+@sync_to_async
+def check_authentication(request):
+    return request.user.is_authenticated
+
+
+@sync_to_async
+def get_user_data(user):
+    return UserSerializer(user).data
+
+
+@sync_to_async
+def create_question(question, user):
+    return Question.objects.create(question=question, created_by=user)
+
+
+@sync_to_async
+def add_vector_file():
+    VectorStoreManager().add_file()
+
+
+@api.post("", response={200: ChatbotResponseSchema, 400: ErrorSchema})
+async def chatbot_endpoint(request, payload: ChatbotRequestSchema):
+    await asyncio.sleep(1)
+
+    # 사용자 인증 확인 - 비동기적으로 처리
+    is_authenticated = await check_authentication(request)
+    if not is_authenticated:
+        return 400, {"detail": "로그인을 해주세요."}
+
+    user = request.user
+    user_data = await get_user_data(user)
+
+    question = payload.question
+    await create_question(question, user)
+
+    # 벡터 저장소에 파일 추가 - 비동기적으로 처리
+    await add_vector_file()
+
+    # 챗봇을 통해 응답 생성
+    chatbot = Chatbot_Run()
+    user_data_str = await sync_to_async(str)(user_data)
+    response = await chatbot.ask(question, user_data_str)
+
+    return 200, {"answer": response}
