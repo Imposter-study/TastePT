@@ -192,9 +192,11 @@ STATICFILES_DIRS = [
 
 # Media files
 if DEBUG:
+    # local storage
     MEDIA_URL = "/media/"
     MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 else:
+    # S3 Bucket
     INSTALLED_APPS += ["storages"]
 
     AWS_ACCESS_KEY_ID = env("AWS_ACCESS_KEY_ID")
@@ -208,10 +210,10 @@ else:
         "CacheControl": "max-age=86400",
     }
 
-    AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
-    MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/'
+    AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"
+    MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
 
-    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
