@@ -8,6 +8,15 @@ email_validator = EmailValidator(message=_("유효한 이메일 주소를 입력
 
 
 class CustomUserManager(UserManager):
+    def create_user(self, email, password=None, **extra_fields):
+        if not email:
+            raise ValueError("The Email field must be set")
+        email = self.normalize_email(email)
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password)  # 비밀번호 해시화
+        user.save(using=self._db)
+        return user
+
     def create_superuser(self, email, password=None, **extra_fields):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
@@ -19,7 +28,9 @@ class CustomUserManager(UserManager):
 
         extra_fields.setdefault("role", "A")
 
-        user = self.model(email=email, password=password, **extra_fields)
+        user = self.model(
+            email=email, password=password, nickname="admin", **extra_fields
+        )
         user.set_password(password)
         user.save(using=self._db)
 
