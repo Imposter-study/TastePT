@@ -232,7 +232,7 @@ class SocialCallbackView(APIView):
             token_url = "https://kauth.kakao.com/oauth/token"
             client_id = os.getenv("KAKAO_CLIENT_ID")
 
-        domain = os.getenv("FRONT_DOMAIN").split(",")[0]
+        domain = os.getenv("REDIRECT_DOMAIN")
 
         data = {
             "grant_type": "authorization_code",
