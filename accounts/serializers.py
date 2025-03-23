@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from .models import Allergy, PreferredCuisine
+from .utils import send_activation_email
 
 User = get_user_model()
 
@@ -44,6 +45,7 @@ class SignUpSerializer(serializers.ModelSerializer):
         if password is not None:
             instance.set_password(password)
 
+        instance.is_active = False
         instance.save()
 
         if allergies_data:
@@ -92,6 +94,7 @@ class SignUpSerializer(serializers.ModelSerializer):
             # 유저의 선호음식
             instance.preferred_cuisine.add(*existing_cuisines)
 
+        send_activation_email(instance)
         return instance
 
     # 출력 데이터를 보여주도록 변환
