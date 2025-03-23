@@ -53,67 +53,78 @@ class UserAPIView(APIView):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    # 개인정보 수정
-    @permission_classes([IsAuthenticated])
-    def put(self, request):
-        user = request.user
 
-        # 프로필 사진 처리
-        if "profile_picture" in request.FILES:
-            profile_pic = request.FILES["profile_picture"]
+# 개인정보 수정
+@permission_classes([IsAuthenticated])
+def put(self, request):
+    user = request.user
+    data_to_update = request.data.copy()  # 원본 데이터 복사
 
-            # 안전한 파일명으로 변환
-            import uuid
+    # 프로필 사진 처리
+    if "profile_picture" in request.FILES:
+        profile_pic = request.FILES["profile_picture"]
 
-            ext = profile_pic.name.split(".")[-1] if "." in profile_pic.name else ""
-            safe_filename = f"{uuid.uuid4().hex}.{ext}"
+        # 안전한 파일명으로 변환
+        import uuid
 
-            # S3 경로 지정
-            path = f"profile_picture/{safe_filename}"
+        ext = profile_pic.name.split(".")[-1] if "." in profile_pic.name else ""
+        safe_filename = f"{uuid.uuid4().hex}.{ext}"
 
-            # boto3로 직접 업로드
-            import boto3
-            from django.conf import settings
+        # S3 경로 지정
+        path = f"profile_picture/{safe_filename}"
 
-            s3_client = boto3.client("s3", region_name=settings.AWS_S3_REGION_NAME)
-            try:
-                s3_client.upload_fileobj(
-                    profile_pic,
-                    settings.AWS_STORAGE_BUCKET_NAME,
-                    path,
-                    ExtraArgs={
-                        "ContentType": profile_pic.content_type,
-                        "ACL": "public-read",
-                    },
-                )
+        # boto3로 직접 업로드
+        import boto3
+        from django.conf import settings
 
-                # 파일 URL 생성
-                file_url = f"https://{settings.AWS_S3_CUSTOM_DOMAIN}/{path}"
+        s3_client = boto3.client("s3", region_name=settings.AWS_S3_REGION_NAME)
+        try:
+            s3_client.upload_fileobj(
+                profile_pic,
+                settings.AWS_STORAGE_BUCKET_NAME,
+                path,
+                ExtraArgs={
+                    "ContentType": profile_pic.content_type,
+                    "ACL": "public-read",
+                },
+            )
 
-                # request.data에 URL 추가 (직렬화기에서 사용)
-                request.data._mutable = True
-                request.data["profile_picture"] = file_url
-                request.data._mutable = False
+            # 파일 URL 생성
+            file_url = f"https://{settings.AWS_S3_CUSTOM_DOMAIN}/{path}"
 
-            except Exception as e:
-                return Response(
-                    {"error": f"프로필 이미지 업로드 실패: {str(e)}"},
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                )
+            # 사용자 객체 업데이트 (직접 필드 설정)
+            user.profile_picture = file_url
+            user.save(update_fields=["profile_picture"])
 
-        serializer = ProfileUpdateSerializer(user, data=request.data, partial=True)
+            # 시리얼라이저에는 profile_picture 필드 제외
+            if "profile_picture" in data_to_update:
+                del data_to_update["profile_picture"]
 
+        except Exception as e:
+            return Response(
+                {"error": f"프로필 이미지 업로드 실패: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    # 나머지 필드들 업데이트
+    if data_to_update:
+        serializer = ProfileUpdateSerializer(user, data=data_to_update, partial=True)
         if serializer.is_valid():
             try:
-                updated_user = serializer.save()
-                return Response(serializer.data, status=status.HTTP_200_OK)
+                serializer.save()
+                # 최신 상태로 직렬화하여 반환
+                return Response(
+                    ProfileUpdateSerializer(user).data, status=status.HTTP_200_OK
+                )
             except Exception as e:
                 return Response(
                     {"error": f"프로필 업데이트 오류: {str(e)}"},
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 )
-
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        # 파일만 업데이트된 경우 최신 상태로 직렬화하여 반환
+        return Response(ProfileUpdateSerializer(user).data, status=status.HTTP_200_OK)
 
     # 회원탈퇴
     @permission_classes([IsAuthenticated])
