@@ -1,6 +1,9 @@
+import os
+
 from django.contrib.auth import authenticate, get_user_model, login, logout
 from django.shortcuts import get_object_or_404, redirect
 from django.utils import timezone
+from dotenv import load_dotenv
 from rest_framework import status
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated
@@ -24,7 +27,7 @@ from .serializers import (
 )
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 
-
+load_dotenv()
 User = get_user_model()
 
 
@@ -210,4 +213,5 @@ def verify_email(request, token):
     user.is_active = True  # 계정 활성화
     user.save()
     token_obj.delete()  # 사용된 토큰 삭제
-    return redirect("http://localhost:5173/signin")
+    domain = os.getenv("FRONT_DOMAIN").split(",")[0]
+    return redirect(f"{domain}/signin")
