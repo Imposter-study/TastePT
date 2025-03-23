@@ -254,7 +254,7 @@ def check_signin_view(request):
                 "authenticated": True,
                 "user": request.user.nickname,
                 "profile_img": (
-                    request.user.profile_picture.url
+                    request.user.profile_picture
                     if request.user.profile_picture
                     else False
                 ),
