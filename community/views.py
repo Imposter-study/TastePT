@@ -1,14 +1,18 @@
+import boto3
+import uuid
+from datetime import datetime
 from django.contrib.auth import get_user_model
+from django.conf import settings
 from django.db.models import Prefetch
 from django.db.models import Q
 from django.shortcuts import render, get_object_or_404
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from rest_framework import status, generics
-from .models import Post, Comment
+from .models import Post, Comment, UploadedImage
 from .permissions import IsAuthorOrReadOnly
 from .serializers import PostSerializer, ImageUploadSerializer, CommentSerializer
 from .pagenations import PostPageNumberPagination
@@ -53,15 +57,57 @@ class PostViewSet(ModelViewSet):
 
 
 class ImageUploadView(APIView):
+    permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
-        serializer = ImageUploadSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
+        if "image" not in request.FILES:
             return Response(
-                {"file_path": serializer.data["image"]}, status=status.HTTP_201_CREATED
+                {"error": "이미지 파일이 제공되지 않았습니다."},
+                status=status.HTTP_400_BAD_REQUEST
             )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        image_file = request.FILES["image"]
+
+        # 안전한 파일명으로 변환
+        ext = image_file.name.split(".")[-1] if "." in image_file.name else ""
+        safe_filename = f"{uuid.uuid4().hex}.{ext}"
+
+        # S3 경로 지정 (연/월/일 구조)
+        now = datetime.now()
+        path = f"posts/{now.year}/{now.month}/{now.day}/{safe_filename}"
+
+        # S3 클라이언트 생성 및 업로드
+        s3_client = boto3.client("s3", region_name=settings.AWS_S3_REGION_NAME)
+        try:
+            s3_client.upload_fileobj(
+                image_file,
+                settings.AWS_STORAGE_BUCKET_NAME,
+                path,
+                ExtraArgs={
+                    "ContentType": image_file.content_type,
+                    "ACL": "public-read",  # 공개 읽기 권한 설정
+                }
+            )
+
+            # 파일 URL 생성
+            if settings.AWS_S3_CUSTOM_DOMAIN:
+                file_url = f"https://{settings.AWS_S3_CUSTOM_DOMAIN}/{path}"
+            else:
+                file_url = f"https://{settings.AWS_STORAGE_BUCKET_NAME}.s3.{settings.AWS_S3_REGION_NAME}.amazonaws.com/{path}"
+
+            # 데이터베이스에 URL 저장
+            uploaded_image = UploadedImage.objects.create(image=file_url)
+
+            return Response(
+                {"file_path": file_url},
+                status=status.HTTP_201_CREATED
+            )
+
+        except Exception as e:
+            return Response(
+                {"error": f"이미지 업로드 실패: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 # 댓글 수정 & 삭제 (PUT, DELETE)

@@ -1,5 +1,5 @@
-from django.contrib.auth import get_user_model
 from django.db import models
+from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
@@ -12,7 +12,6 @@ class TimeStamp(models.Model):
         abstract = True  # 다른 모델에서 상속만 가능하도록 설정
 
 
-# Create your models here.
 class Post(TimeStamp):
     title = models.CharField(max_length=64)
     content = models.TextField()
@@ -26,8 +25,11 @@ class Post(TimeStamp):
 
 
 class UploadedImage(models.Model):
-    image = models.ImageField(upload_to="posts/%Y/%m/%d")  # 업로드 경로 지정
+    image = models.URLField(max_length=255)
     uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.image
 
 
 class Comment(TimeStamp):
