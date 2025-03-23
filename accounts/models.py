@@ -88,9 +88,7 @@ class User(AbstractUser):
     allergies = models.ManyToManyField(Allergy, blank=True)
     preferred_cuisine = models.ManyToManyField(PreferredCuisine, blank=True)
     diet = models.BooleanField(default=False)
-    profile_picture = models.ImageField(
-        upload_to="profile_picture/", null=True, blank=True
-    )
+    profile_picture = models.URLField(null=True, blank=True)
 
     # 비공개 필드
     role = models.CharField(choices=ROLE_CHOICES, max_length=1, default="U")
