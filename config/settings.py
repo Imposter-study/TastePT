@@ -137,9 +137,9 @@ REDIS_HOST = env("REDIS_HOST")
 REDIS_PASSWORD = env("REDIS_PASSWORD")
 
 if REDIS_PASSWORD:
-    REDIS_URL = f"redis://:{REDIS_PASSWORD}@{REDIS_HOST}:6379/0"
+    REDIS_URL = f"rediss://:{REDIS_PASSWORD}@{REDIS_HOST}:6379/0"
 else:
-    REDIS_URL = f"redis://{REDIS_HOST}:6379/0"
+    REDIS_URL = f"rediss://{REDIS_HOST}:6379/0"
 
 # Cache 설정
 CACHES = {
