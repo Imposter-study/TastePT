@@ -1,5 +1,3 @@
-import os
-
 from django.contrib.auth import authenticate, get_user_model, login, logout
 from django.shortcuts import get_object_or_404, redirect
 from django.utils import timezone
@@ -10,6 +8,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView
+import os
+import requests
+
 from .models import (
     Allergy,
     PreferredCuisine,
@@ -204,6 +205,79 @@ def check_signin_view(request):
             }
         )
     return Response({"authenticated": False})
+
+
+class SocialSigninView(APIView):
+    def get(self, request, provider):
+        if provider == "kakao":
+            client_id = os.getenv("KAKAO_CLIENT_ID")
+            redirect_domain = os.getenv("REDIRECT_DOMAIN")
+
+            redirect_uri = (
+                f"{redirect_domain}/api/v1/accounts/social/callback/{provider}"
+            )
+            auth_url = f"https://kauth.kakao.com/oauth/authorize?response_type=code&client_id={client_id}&redirect_uri={redirect_uri}"
+            return Response({"auth_url": auth_url})
+            # return redirect(auth_url)
+
+
+class SocialCallbackView(APIView):
+    def get(self, request, provider):
+
+        code = request.GET.get("code")
+        access_token = self.get_token(provider, code)
+        user_info = self.get_user(provider, access_token)
+        user = self.get_or_create_user(provider, user_info)
+        login(request, user)
+
+        redirect_url = os.getenv("FRONT_DOMAIN").split(",")[0]
+        return redirect(redirect_url)
+
+    def get_token(self, provider, code):
+        if provider == "kakao":
+            token_url = "https://kauth.kakao.com/oauth/token"
+            client_id = os.getenv("KAKAO_CLIENT_ID")
+
+        data = {
+            "grant_type": "authorization_code",
+            "client_id": client_id,
+            "redirect_uri": f"http://localhost:8000/api/v1/accounts/social/callback/{provider}",
+            "code": code,
+        }
+
+        response = requests.post(token_url, data)
+        return response.json().get("access_token")
+
+    def get_user(self, provider, access_token):
+        if provider == "kakao":
+            user_info_url = "https://kapi.kakao.com/v2/user/me"
+
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/x-www-form-urlencoded;charset=utf-8",
+        }
+        response = requests.get(user_info_url, headers=headers)
+        return response.json().get("kakao_account")
+
+    def get_or_create_user(self, provider, user_info):
+        defaults = {"nickname": user_info.get("profile").get("nickname")}
+
+        # 프로필 이미지 경로로 인해 주석처리
+        # if user_info.get("profile").get("profile_image_url"):
+        #     defaults["profile_picture"] = user_info.get("profile").get(
+        #         "profile_image_url"
+        #     )
+
+        # 유저가 이미 있으면 유저 정보를 가져오고 없으면 유저 생성
+        user, created = User.objects.get_or_create(
+            email=user_info.get("email"), defaults=defaults
+        )
+
+        if created:
+            user.set_unusable_password()
+            user.save()
+
+        return user
 
 
 @api_view(["GET"])
