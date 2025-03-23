@@ -49,7 +49,6 @@ INSTALLED_APPS = [
     "corsheaders",
     "drf_spectacular",
     "ninja",
-    "storages",
     # allauth
     "allauth",
     "allauth.account",
