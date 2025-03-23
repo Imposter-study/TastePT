@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "drf_spectacular",
     "ninja",
+    "storages",
     # allauth
     "allauth",
     "allauth.account",
@@ -218,7 +219,7 @@ else:
     AWS_DEFAULT_ACL = "public-read"
     AWS_S3_OBJECT_PARAMETERS = {
         "CacheControl": "max-age=86400",
-        'ACL': 'public-read',
+        "ACL": "public-read",
     }
 
     AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"
