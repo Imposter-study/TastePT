@@ -28,11 +28,6 @@ from .serializers import (
     PreferredCuisineSerializer,
 )
 
-# log
-import logging
-
-logger = logging.getLogger("accounts")
-
 load_dotenv()
 User = get_user_model()
 
@@ -61,40 +56,63 @@ class UserAPIView(APIView):
     # 개인정보 수정
     @permission_classes([IsAuthenticated])
     def put(self, request):
-        logger.debug("프로필 업데이트 시작")
         user = request.user
 
-        # 프로필 사진 업로드 로깅
+        # 프로필 사진 처리
         if "profile_picture" in request.FILES:
             profile_pic = request.FILES["profile_picture"]
-            logger.info(
-                f"프로필 사진 정보: {profile_pic.name}, {profile_pic.size}, {profile_pic.content_type}"
-            )
 
             # 안전한 파일명으로 변환
             import uuid
 
             ext = profile_pic.name.split(".")[-1] if "." in profile_pic.name else ""
-            profile_pic.name = f"{uuid.uuid4().hex}.{ext}"
-            logger.info(f"변환된 파일명: {profile_pic.name}")
+            safe_filename = f"{uuid.uuid4().hex}.{ext}"
+
+            # S3 경로 지정
+            path = f"profile_picture/{safe_filename}"
+
+            # boto3로 직접 업로드
+            import boto3
+            from django.conf import settings
+
+            s3_client = boto3.client("s3", region_name=settings.AWS_S3_REGION_NAME)
+            try:
+                s3_client.upload_fileobj(
+                    profile_pic,
+                    settings.AWS_STORAGE_BUCKET_NAME,
+                    path,
+                    ExtraArgs={
+                        "ContentType": profile_pic.content_type,
+                        "ACL": "public-read",
+                    },
+                )
+
+                # 파일 URL 생성
+                file_url = f"https://{settings.AWS_S3_CUSTOM_DOMAIN}/{path}"
+
+                # request.data에 URL 추가 (직렬화기에서 사용)
+                request.data._mutable = True
+                request.data["profile_picture"] = file_url
+                request.data._mutable = False
+
+            except Exception as e:
+                return Response(
+                    {"error": f"프로필 이미지 업로드 실패: {str(e)}"},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                )
 
         serializer = ProfileUpdateSerializer(user, data=request.data, partial=True)
 
         if serializer.is_valid():
             try:
                 updated_user = serializer.save()
-                if "profile_picture" in request.FILES and updated_user.profile_picture:
-                    logger.info(
-                        f"프로필 사진 저장 성공: {updated_user.profile_picture.url}"
-                    )
                 return Response(serializer.data, status=status.HTTP_200_OK)
             except Exception as e:
-                logger.error(f"프로필 업데이트 오류: {str(e)}", exc_info=True)
                 return Response(
-                    {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                    {"error": f"프로필 업데이트 오류: {str(e)}"},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 )
 
-        logger.error(f"유효성 검증 오류: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # 회원탈퇴
