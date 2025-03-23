@@ -11,7 +11,13 @@ from rest_framework.generics import ListAPIView
 import os
 import requests
 
-from .models import Allergy, PreferredCuisine, NicknamePrefix, NicknameSuffix
+from .models import (
+    Allergy,
+    PreferredCuisine,
+    NicknamePrefix,
+    NicknameSuffix,
+    EmailVerificationToken,
+)
 from .serializers import (
     SignUpSerializer,
     ProfileUpdateSerializer,
@@ -272,3 +278,14 @@ class SocialCallbackView(APIView):
             user.save()
 
         return user
+
+
+@api_view(["GET"])
+def verify_email(request, token):
+    token_obj = get_object_or_404(EmailVerificationToken, token=token)
+    user = token_obj.user
+    user.is_active = True  # 계정 활성화
+    user.save()
+    token_obj.delete()  # 사용된 토큰 삭제
+    domain = os.getenv("FRONT_DOMAIN").split(",")[0]
+    return redirect(f"{domain}/signin")

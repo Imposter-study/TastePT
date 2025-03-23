@@ -2,6 +2,7 @@ from django.core.validators import EmailValidator
 from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+import uuid
 
 # 커스텀 유효성 검사 정의
 email_validator = EmailValidator(message=_("유효한 이메일 주소를 입력하세요."))
@@ -115,3 +116,9 @@ class NicknameSuffix(models.Model):
 
     def __str__(self):
         return self.word
+
+
+class EmailVerificationToken(models.Model):
+    user = models.OneToOneField(to=User, on_delete=models.CASCADE)
+    token = models.UUIDField(default=uuid.uuid4, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
