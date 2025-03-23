@@ -57,6 +57,7 @@ class UserAPIView(APIView):
     @permission_classes([IsAuthenticated])
     def put(self, request):
         user = request.user
+        data_to_update = request.data.copy()  # 원본 데이터 복사
 
         # 프로필 사진 처리
         if "profile_picture" in request.FILES:
@@ -90,10 +91,17 @@ class UserAPIView(APIView):
                 # 파일 URL 생성
                 file_url = f"https://{settings.AWS_S3_CUSTOM_DOMAIN}/{path}"
 
-                # request.data에 URL 추가 (직렬화기에서 사용)
-                request.data._mutable = True
-                request.data["profile_picture"] = file_url
-                request.data._mutable = False
+                # User 모델의 profile_picture 필드를 직접 업데이트
+                from django.core.files.base import ContentFile
+                import requests
+
+                # profile_picture 필드 직접 업데이트
+                user.profile_picture = file_url
+                user.save(update_fields=["profile_picture"])
+
+                # 시리얼라이저에서는
+                if "profile_picture" in data_to_update:
+                    del data_to_update["profile_picture"]
 
             except Exception as e:
                 return Response(
@@ -101,19 +109,18 @@ class UserAPIView(APIView):
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 )
 
-        serializer = ProfileUpdateSerializer(user, data=request.data, partial=True)
+        # 나머지 필드들 업데이트
+        if data_to_update:
+            serializer = ProfileUpdateSerializer(
+                user, data=data_to_update, partial=True
+            )
+            if serializer.is_valid():
+                serializer.save()
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        if serializer.is_valid():
-            try:
-                updated_user = serializer.save()
-                return Response(serializer.data, status=status.HTTP_200_OK)
-            except Exception as e:
-                return Response(
-                    {"error": f"프로필 업데이트 오류: {str(e)}"},
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                )
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        # 최종 업데이트된 사용자 정보 반환
+        return Response(ProfileUpdateSerializer(user).data, status=status.HTTP_200_OK)
 
     # 회원탈퇴
     @permission_classes([IsAuthenticated])
