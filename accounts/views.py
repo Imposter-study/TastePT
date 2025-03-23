@@ -1,4 +1,8 @@
+import boto3
+import os
+import requests
 from django.contrib.auth import authenticate, get_user_model, login, logout
+from django.conf import settings
 from django.shortcuts import get_object_or_404, redirect
 from django.utils import timezone
 from dotenv import load_dotenv
@@ -9,9 +13,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView
-import os
-import requests
-
 from .models import (
     Allergy,
     PreferredCuisine,
@@ -72,10 +73,6 @@ class UserAPIView(APIView):
             # S3 경로 지정
             path = f"profile_picture/{safe_filename}"
 
-            # boto3로 직접 업로드
-            import boto3
-            from django.conf import settings
-
             s3_client = boto3.client("s3", region_name=settings.AWS_S3_REGION_NAME)
             try:
                 s3_client.upload_fileobj(
@@ -90,10 +87,6 @@ class UserAPIView(APIView):
 
                 # 파일 URL 생성
                 file_url = f"https://{settings.AWS_S3_CUSTOM_DOMAIN}/{path}"
-
-                # User 모델의 profile_picture 필드를 직접 업데이트
-                from django.core.files.base import ContentFile
-                import requests
 
                 # profile_picture 필드 직접 업데이트
                 user.profile_picture = file_url
@@ -119,7 +112,6 @@ class UserAPIView(APIView):
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        # 최종 업데이트된 사용자 정보 반환
         return Response(ProfileUpdateSerializer(user).data, status=status.HTTP_200_OK)
 
     # 회원탈퇴
