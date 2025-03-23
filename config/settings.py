@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "drf_spectacular",
     "ninja",
+    "storages",
     # allauth
     "allauth",
     "allauth.account",
@@ -202,9 +203,11 @@ STATICFILES_DIRS = [
 
 # Media files
 if DEBUG:
+    # local storage
     MEDIA_URL = "/media/"
     MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 else:
+    # S3 Bucket
     INSTALLED_APPS += ["storages"]
 
     AWS_ACCESS_KEY_ID = env("AWS_ACCESS_KEY_ID")
@@ -216,6 +219,7 @@ else:
     AWS_DEFAULT_ACL = "public-read"
     AWS_S3_OBJECT_PARAMETERS = {
         "CacheControl": "max-age=86400",
+        "ACL": "public-read",
     }
 
     AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"
