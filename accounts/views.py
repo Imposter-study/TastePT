@@ -2,6 +2,7 @@ from django.contrib.auth import authenticate, get_user_model, login, logout
 from django.shortcuts import get_object_or_404, redirect
 from django.utils import timezone
 from dotenv import load_dotenv
+from drf_spectacular.utils import extend_schema, OpenApiResponse
 from rest_framework import status
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated
@@ -26,7 +27,11 @@ from .serializers import (
     AllergySerializer,
     PreferredCuisineSerializer,
 )
-from drf_spectacular.utils import extend_schema, OpenApiResponse
+
+# log
+import logging
+
+logger = logging.getLogger("accounts")
 
 load_dotenv()
 User = get_user_model()
@@ -56,14 +61,40 @@ class UserAPIView(APIView):
     # 개인정보 수정
     @permission_classes([IsAuthenticated])
     def put(self, request):
+        logger.debug("프로필 업데이트 시작")
         user = request.user
+
+        # 프로필 사진 업로드 로깅
+        if "profile_picture" in request.FILES:
+            profile_pic = request.FILES["profile_picture"]
+            logger.info(
+                f"프로필 사진 정보: {profile_pic.name}, {profile_pic.size}, {profile_pic.content_type}"
+            )
+
+            # 안전한 파일명으로 변환
+            import uuid
+
+            ext = profile_pic.name.split(".")[-1] if "." in profile_pic.name else ""
+            profile_pic.name = f"{uuid.uuid4().hex}.{ext}"
+            logger.info(f"변환된 파일명: {profile_pic.name}")
 
         serializer = ProfileUpdateSerializer(user, data=request.data, partial=True)
 
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            try:
+                updated_user = serializer.save()
+                if "profile_picture" in request.FILES and updated_user.profile_picture:
+                    logger.info(
+                        f"프로필 사진 저장 성공: {updated_user.profile_picture.url}"
+                    )
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            except Exception as e:
+                logger.error(f"프로필 업데이트 오류: {str(e)}", exc_info=True)
+                return Response(
+                    {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
 
+        logger.error(f"유효성 검증 오류: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # 회원탈퇴
