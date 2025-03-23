@@ -1,5 +1,5 @@
 from django.contrib.auth import authenticate, get_user_model, login, logout
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import permission_classes, api_view
@@ -7,7 +7,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView
-from .models import Allergy, PreferredCuisine, NicknamePrefix, NicknameSuffix
+from .models import (
+    Allergy,
+    PreferredCuisine,
+    NicknamePrefix,
+    NicknameSuffix,
+    EmailVerificationToken,
+)
 from .serializers import (
     SignUpSerializer,
     ProfileUpdateSerializer,
@@ -195,3 +201,13 @@ def check_signin_view(request):
             }
         )
     return Response({"authenticated": False})
+
+
+@api_view(["GET"])
+def verify_email(request, token):
+    token_obj = get_object_or_404(EmailVerificationToken, token=token)
+    user = token_obj.user
+    user.is_active = True  # 계정 활성화
+    user.save()
+    token_obj.delete()  # 사용된 토큰 삭제
+    return redirect("http://localhost:5173/signin")
