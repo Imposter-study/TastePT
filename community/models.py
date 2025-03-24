@@ -18,7 +18,7 @@ class Post(TimeStamp):
     author = models.ForeignKey(
         to=User, on_delete=models.SET_NULL, null=True, related_name="posts"
     )
-    thumbnail = models.URLField(max_length=255, blank=True)
+    thumbnail = models.ImageField(blank=True, upload_to="thumbnail/%Y/%m/%d")
 
     def __str__(self):
         return self.title
