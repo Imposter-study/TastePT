@@ -13,6 +13,10 @@ def upload_image(image_file, directory="posts"):
     if not image_file:
         return ""
 
+    # 파일 내용을 미리 읽고 파일 포인터 초기화
+    file_content = image_file.read()
+    image_file.seek(0)
+
     ext = image_file.name.split(".")[-1] if "." in image_file.name else ""
     safe_filename = f"{uuid.uuid4().hex}.{ext}"
 
@@ -22,7 +26,7 @@ def upload_image(image_file, directory="posts"):
     # DEBUG 모드에 따라 저장 로직 분기
     if settings.DEBUG:
         # 로컬 저장소에 저장
-        file_path = default_storage.save(relative_path, ContentFile(image_file.read()))
+        file_path = default_storage.save(relative_path, ContentFile(file_content))
         return settings.MEDIA_URL + file_path
     else:
         # S3에 업로드
@@ -34,9 +38,14 @@ def upload_image(image_file, directory="posts"):
                 aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
             )
 
+            # 바이트 스트림 생성
+            from io import BytesIO
+
+            file_stream = BytesIO(file_content)
+
             # S3에 업로드
             s3_client.upload_fileobj(
-                image_file,
+                file_stream,
                 settings.AWS_STORAGE_BUCKET_NAME,
                 relative_path,
                 ExtraArgs={
@@ -53,4 +62,8 @@ def upload_image(image_file, directory="posts"):
             else:
                 return f"https://{settings.AWS_STORAGE_BUCKET_NAME}.s3.{settings.AWS_S3_REGION_NAME}.amazonaws.com/{relative_path}"
         except Exception as e:
+            import logging
+
+            logger = logging.getLogger(__name__)
+            logger.error(f"S3 이미지 업로드 실패: {str(e)}", exc_info=True)
             raise Exception(f"S3 이미지 업로드 실패: {str(e)}")
