@@ -112,6 +112,7 @@ pathspec==0.12.1
 pexpect==4.9.0
 pillow==11.1.0
 platformdirs==4.3.6
+portone-server-sdk==0.15.0
 posthog==3.18.1
 prompt_toolkit==3.0.50
 propcache==0.3.0

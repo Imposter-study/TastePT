@@ -28,6 +28,7 @@ urlpatterns = [
     path("api/v1/accounts/", include("accounts.urls")),
     path("api/v1/chatbot/", api.urls),
     path("api/v1/community/", include("community.urls")),
+    path("api/v1/payment/", include("payment.urls")),
     path(
         "api/v1/schema/", SpectacularAPIView.as_view(), name="schema"
     ),  # swagger-ui 참조 데이터
