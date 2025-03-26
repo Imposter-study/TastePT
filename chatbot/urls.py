@@ -1,7 +1,7 @@
-from django.urls import path
-from .views import api
+# from django.urls import path
+# from .views import api
 
 
-urlpatterns = [
-    path("", api.urls),
-]
+# urlpatterns = [
+#     path("", api.urls),
+# ]

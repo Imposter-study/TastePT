@@ -1,3 +1,4 @@
-from django.shortcuts import render
+from portone_server_sdk.payment import PaymentClient
 
-# Create your views here.
+def payment_view():
+    return PaymentClient.pay_instantly()
