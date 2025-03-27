@@ -56,7 +56,7 @@ class EmailMessageAdmin(admin.ModelAdmin):
 
         self.message_user(request, f"{queryset.count()}개의 이메일을 전송하였습니다.")
 
-    send_selected_emails.short_description = "선색한 이메일 전송"
+    send_selected_emails.short_description = "선택한 이메일 전송"
 
 
 admin.site.register(User, UserAdmin)
