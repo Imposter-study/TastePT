@@ -255,3 +255,9 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+# Celery
+CELERY_BROKER_URL = "redis://redis:6379/0"  # 작업을 처리한 메세지 큐 시스템(celery가 사용할 메세지 브로커의 url)
+CELERY_ACCEPT_CONTENT = ["json"]  # Celery가 수용할 작업의 콘텐츠 형식
+CELERY_TASK_SERIALIZER = "json"  # Celery가 작업을 직렬화할 때 사용할 형식
+CELERY_RESULT_BACKEND = "redis://redis:6379/0"  # 작업이 완료된 후 결과를 저장할 위치
