@@ -155,7 +155,7 @@ class ReportView(APIView):
         if type == "post":
             post = get_object_or_404(Post, pk=pk)
             comment = None
-        elif type - "comment":
+        elif type == "comment":
             post = None
             comment = get_object_or_404(Comment, pk=pk)
         report = Report.objects.filter(reporter=reporter, post=post, comment=comment)
