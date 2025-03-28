@@ -1,8 +1,56 @@
+# Python / Django 관련
 __pycache__/
 *.pyc
 *.pyo
-*.log
+*.pyd
+.Python
 .env
+.env.*
+*.log
 db.sqlite3
 /static
 /media
+.coverage
+htmlcov/
+
+# Node.js 관련
+node_server/node_modules/
+node_server/npm-debug.log
+node_server/yarn-debug.log
+node_server/yarn-error.log
+node_server/.npm
+node_server/coverage/
+node_server/dist/
+node_server/build/
+
+# Git 관련
+.git/
+.github/
+.gitignore
+.gitattributes
+
+# 문서 및 기타 불필요한 파일
+*.md
+LICENSE
+*.txt
+!requirements.txt
+
+# IDE 관련
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Docker 관련
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# 테스트 관련
+.pytest_cache/
+.coverage
+htmlcov/
+
+# 기타 시스템 파일
+.DS_Store
+Thumbs.db

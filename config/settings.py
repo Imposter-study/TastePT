@@ -157,6 +157,10 @@ CACHES = {
     }
 }
 
+# Node.js 웹소켓 서버 URL
+NODE_SERVER_URL = env("NODE_SERVER_URL")
+
+# CICD 환경 설정
 if env("CI") == "true":
     CACHES = {
         "default": {
