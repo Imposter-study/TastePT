@@ -48,11 +48,20 @@ class VectorStoreManager:
         self.db = Chroma(
             persist_directory=persist_directory,
             embedding_function=OpenAIEmbeddings(model="text-embedding-ada-002"),
-            collection_metadata={"hnsw:space": "cosine", "hnsw:ef_construction": 200, "hnsw:M": 16},
+            collection_metadata={
+                "hnsw:space": "cosine",
+                "hnsw:ef_construction": 200,
+                "hnsw:M": 16,
+            },
         )
         self.retriever = self.db.as_retriever(
             search_type="mmr",
-            search_kwargs={"k": 3, "fetch_k": 10, "lambda_mult": 0.7,"hnsw:ef_search": 50},
+            search_kwargs={
+                "k": 3,
+                "fetch_k": 10,
+                "lambda_mult": 0.7,
+                "hnsw:ef_search": 50,
+            },
         )
 
         print(" Vector Store is ready!")
