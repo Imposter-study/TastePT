@@ -1,7 +1,6 @@
-from django.conf import settings
+from celery.exceptions import CeleryError
 from django.contrib import admin
 from django.contrib.auth import get_user_model
-from django.core.mail import send_mail
 from django.utils.timezone import now
 from accounts.models import (
     Allergy,
@@ -10,6 +9,7 @@ from accounts.models import (
     NicknameSuffix,
     EmailMessage,
 )
+from accounts.tasks import send_email
 
 User = get_user_model()
 
@@ -44,17 +44,19 @@ class EmailMessageAdmin(admin.ModelAdmin):
             ]
 
             if recipient_list:
-                send_mail(
-                    subject=email_message.subject,
-                    message=email_message.message,
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=recipient_list,
-                    fail_silently=False,
-                )
-                email_message.sent_at = now()
-                email_message.save()
-
-        self.message_user(request, f"{queryset.count()}개의 이메일을 전송하였습니다.")
+                try:
+                    send_email.delay(
+                        email_message.subject, email_message.message, recipient_list
+                    )
+                    email_message.sent_at = now()
+                    email_message.save()
+                    self.message_user(
+                        request, f"{queryset.count()}개의 이메일을 전송하였습니다."
+                    )
+                except CeleryError as e:
+                    self.message_user(
+                        request, f"이메일 전송에 실패하였습니다: {str(e)}"
+                    )
 
     send_selected_emails.short_description = "선택한 이메일 전송"
 
