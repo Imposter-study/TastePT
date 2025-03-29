@@ -44,3 +44,19 @@ class Comment(TimeStamp):
 
     def __str__(self):
         return self.content[:10]
+
+
+class Report(models.Model):
+    reporter = models.ForeignKey(to=User, on_delete=models.SET_NULL, null=True, related_name="reports")
+    post = models.ForeignKey(to=Post, on_delete=models.CASCADE, null=True, related_name="reports")
+    comment = models.ForeignKey(to=Comment, on_delete=models.CASCADE, null=True, related_name="reports")
+
+    class Meta:
+        # 중복 신고가 불가능하도록 여러 필드에 대해 unique 옵션 설정
+        unique_together = ["reporter", "post", "comment"]
+
+    def __str__(self):
+        if self.post:
+            return f"{self.reporter.nickname}님이 게시글 {self.post.id}번을 신고하였습니다."
+        elif self.comment:
+            return f"{self.reporter.nickname}님이 댓글 {self.comment.id}번을 신고하였습니다."

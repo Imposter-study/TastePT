@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from rest_framework import status, generics
-from .models import Post, Comment
+from .models import Post, Comment, Report
 from .permissions import IsAuthorOrReadOnly
 from .serializers import PostSerializer, ImageUploadSerializer, CommentSerializer
 from .pagenations import PostPageNumberPagination
@@ -143,3 +143,26 @@ class CommentUpdateDeleteView(generics.UpdateAPIView, generics.DestroyAPIView):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
+
+
+class ReportView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        type = request.data["type"]
+        reporter = request.user
+
+        if type == "post":
+            post = get_object_or_404(Post, pk=pk)
+            comment = None
+        elif type == "comment":
+            post = None
+            comment = get_object_or_404(Comment, pk=pk)
+        report = Report.objects.filter(reporter=reporter, post=post, comment=comment)
+
+        if report:
+            return Response({"detail": "이미 신고한 게시글/댓글 입니다"}, status=400)
+
+        Report.objects.create(reporter=reporter, post=post, comment=comment)
+
+        return Response({"detail": "신고가 완료되었습니다."}, status=201)

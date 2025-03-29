@@ -13,5 +13,6 @@ urlpatterns = [
         views.CommentUpdateDeleteView.as_view(),
         name="comment-detail",
     ),
+    path("<int:pk>/report/", views.ReportView.as_view(), name="report"),
     path("", include(router.urls)),
 ]
