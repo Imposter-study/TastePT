@@ -15,6 +15,28 @@ services:
       - .:/app
     command: gunicorn config.wsgi:application --bind 0.0.0.0:8000
 
+  node_server:
+    build:
+      context: ./node_server
+      dockerfile: Dockerfile
+    container_name: node_websocket
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - DJANGO_SERVER_URL=http://django_app:8000
+      - PORT=3000
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./node_server:/app
+    depends_on:
+      - django_app
+    networks:
+      - app_network
+    restart: unless-stopped
+    command: npm start
+
   celery:
     build: .
     container_name: celery
@@ -38,6 +60,7 @@ services:
       - "80:80"
     depends_on:
       - django_app
+      - node_server
     networks:
       - app_network
 
