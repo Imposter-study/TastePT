@@ -37,6 +37,19 @@ services:
     restart: unless-stopped
     command: npm start
 
+  celery:
+    build: .
+    container_name: celery
+    command: celery -A config.celery worker --loglevel=info
+    volumes:
+      - .:/code
+    depends_on:
+      - django_app
+    networks:
+      - app_network
+    env_file:
+      - .env
+
   nginx:
     image: nginx:latest
     container_name: nginx

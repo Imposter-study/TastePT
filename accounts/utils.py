@@ -3,6 +3,7 @@ import os
 from django.core.mail import send_mail
 from django.conf import settings
 from dotenv import load_dotenv
+from .tasks import send_email
 
 from .models import EmailVerificationToken
 
@@ -17,12 +18,8 @@ def send_activation_email(user):
     subject = "[TastePT] 회원가입을 위한 이메일 인증을 완료해주세요."
     message = f"다음 링크를 클릭하여 이메일을 인증해주세요: \n {activation_link}"
 
-    send_mail(
+    send_email.delay(
         subject,
         message,
-        settings.DEFAULT_FROM_EMAIL,
-        [
-            user.email,
-        ],
-        fail_silently=False,
+        [user.email],
     )
