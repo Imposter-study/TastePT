@@ -2,7 +2,6 @@
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
-from langchain_core.output_parsers import StrOutputParser
 from langchain_chroma import Chroma
 from langchain_community.document_loaders.csv_loader import CSVLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -48,11 +47,16 @@ class VectorStoreManager:
         self.db = Chroma(
             persist_directory=persist_directory,
             embedding_function=OpenAIEmbeddings(model="text-embedding-ada-002"),
-            collection_metadata={"hnsw:space": "cosine", "hnsw:ef_construction": 200, "hnsw:M": 16},
+            collection_metadata={
+                "hnsw:space": "cosine",
+            },
         )
         self.retriever = self.db.as_retriever(
             search_type="mmr",
-            search_kwargs={"k": 3, "fetch_k": 10, "lambda_mult": 0.7,"hnsw:ef_search": 50},
+            search_kwargs={
+                "k": 3,
+                "fetch_k": 10,
+            },
         )
 
         print(" Vector Store is ready!")
@@ -99,7 +103,7 @@ class Chatbot_Run:
         print("Initializing RAGManager...")
 
         # LLM 설정
-        self.llm = ChatOpenAI(model_name="gpt-4o-mini", temperature=0.7)
+        self.llm = ChatOpenAI(model_name="gpt-4o-mini", temperature=0.9)
 
         # 프롬프트 불러오기
         langfuse_prompt = langfuse.get_prompt("TastePT")
@@ -120,10 +124,8 @@ class Chatbot_Run:
             }
             | self.prompt
             | self.llm
-            | StrOutputParser()
         )
 
-    # 질문을 받아 응답 생성
     async def ask(self, query: str, user_data):
         # MMR로 문서 검색 후 BM25 기반 리랭킹
         mmr_recipes = await self.retriever.ainvoke(query)
