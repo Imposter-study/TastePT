@@ -1,7 +1,12 @@
 from django.urls import path
-from .views import api
+from ninja import NinjaAPI
+from .views import router, test
 
+
+api = NinjaAPI()
+api.add_router("", router)
 
 urlpatterns = [
-    path("", api.urls),
+    path("chatbot/", api.urls, name="chatbot_api"),
+    path("test/", test, name="chatbot_test"),
 ]
