@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 import environ
 import os
+from pathlib import Path
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -37,6 +39,10 @@ ALLOWED_HOSTS = env("ALLOWED_HOSTS").split(",")
 # Application definition
 
 INSTALLED_APPS = [
+    # Channles
+    "channels",
+    "daphne",
+    # django
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -50,6 +56,7 @@ INSTALLED_APPS = [
     "accounts",
     "chatbot",
     "community",
+    "livechat",
 ]
 
 MIDDLEWARE = [
@@ -68,7 +75,7 @@ ROOT_URLCONF = "config.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [os.path.join(BASE_DIR, "templates")],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -191,3 +198,19 @@ LANGFUSE_CONFIG = {
     "public_key": LANGFUSE_PUBLIC_KEY,
     "host": LANGFUSE_HOST,
 }
+
+ASGI_APPLICATION = "config.asgi.application"
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],  # Redis 서버 주소
+        },
+    },
+}
+
+#Django WebSocket요청 허용
+CORS_ALLOW_ALL_ORIGINS = True  
+CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1:8000", "http://localhost:8000"]
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')

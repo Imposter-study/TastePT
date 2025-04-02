@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>채팅방 목록</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .chatroom-list { width: 400px; margin-top: 10px; }
+        .chatroom { padding: 10px; margin: 5px 0; border: 1px solid #ccc; cursor: pointer; }
+        .chatroom:hover { background-color: #f1f1f1; }
+    </style>
+    <script>
+        async function getChatRooms() {
+            const response = await fetch('http://localhost:8000/api/v1/livechat/chatrooms/');
+            const data = await response.json();
+            const chatroomList = document.getElementById('chatroom-list');
+            chatroomList.innerHTML = "";
+
+            data.forEach(room => {
+                const div = document.createElement("div");
+                div.classList.add("chatroom");
+                div.innerHTML = `<strong>${room.title}</strong><br>${room.content}`;
+                div.onclick = () => enterChatRoom(room.id);
+                chatroomList.appendChild(div);
+            });
+        }
+
+        function enterChatRoom(roomId) {
+            window.location.href = `chatroom.html?room_id=${roomId}`;
+        }
+
+        async function createChatRoom() {
+            const formData = new FormData();
+            formData.append('title', document.getElementById('title').value);
+            formData.append('content', document.getElementById('description').value);
+            formData.append('hashtags', document.getElementById('hashtags').value);
+            const imageFile = document.getElementById('image').files[0];
+            if (imageFile) {
+                formData.append('image', imageFile);
+            }
+
+            const response = await fetch('http://localhost:8000/api/v1/livechat/chatrooms/', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+            if (data.id) {
+                enterChatRoom(data.id); // 채팅방 생성 후 자동 입장
+            } else {
+                alert("채팅방 생성에 실패했습니다.");
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>채팅방 목록</h1>
+    <button onclick="getChatRooms()">채팅방 목록 가져오기</button>
+    <div id="chatroom-list" class="chatroom-list"></div>
+
+    <h2>채팅방 만들기</h2>
+    <label for="title">제목:</label>
+    <input type="text" id="title" required><br>
+    <label for="description">설명:</label>
+    <input type="text" id="description"><br>
+    <label for="hashtags">해시태그 (쉼표로 구분):</label>
+    <input type="text" id="hashtags"><br>
+    <label for="image">이미지:</label>
+    <input type="file" id="image"><br>
+    <button onclick="createChatRoom()">채팅방 만들기</button>
+</body>
+</html>

@@ -21,11 +21,14 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
+
+
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/v1/accounts/", include("accounts.urls")),
     path("api/v1/chatbot/", include("chatbot.urls")),
     path("api/v1/community/", include("community.urls")),
+    path('api/v1/livechat/', include('livechat.urls')),
 ]
 
 # 개발 환경에서만 media 파일 서빙

@@ -1,0 +1,23 @@
+{
+  "name": "tastept",
+  "version": "1.0.0",
+  "description": "- SA문서  \r https://www.notion.so/SA-1a97d4611a6f805d8bdbe9ae94405f62",
+  "main": "sever.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Imposter-study/TastePT.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Imposter-study/TastePT/issues"
+  },
+  "homepage": "https://github.com/Imposter-study/TastePT#readme",
+  "dependencies": {
+    "express": "^4.21.2",
+    "ws": "^8.18.1"
+  }
+}
