@@ -2,7 +2,7 @@ from ninja import Router
 from asgiref.sync import sync_to_async
 from django.shortcuts import get_object_or_404
 
-from .utils import check_authentication, get_user_data, create_question, add_vector_file
+from .utils import check_authentication, get_user_data
 from .schema import (
     ChatbotRequestSchema,
     ChatbotResponseSchema,
@@ -21,9 +21,9 @@ router = Router()
 def list_rooms(request):
     # 로그인된 사용자만 접근 가능
     if not request.user.is_authenticated:
-        return {"detail": "Authentication required."}, 401
+        return {"detail": "로그인을 해주세요."}, 401
     # 로그인된 사용자가 생성한 채팅방만 조회
-    return ChatRoom.objects.filter(user=request.user)
+    return ChatRoom.objects.filter(created_by=request.user)
 
 
 # 챗봇 질문방 생성
@@ -38,7 +38,7 @@ def create_room(request, room: ChatRoomSchema):
         return {"detail": "Room name을 지정해주세요."}, 400
 
     # 채팅방 생성 시, 현재 로그인된 사용자(user)를 추가
-    chat_room = ChatRoom.objects.create(name=room.name, user=request.user)
+    chat_room = ChatRoom.objects.create(name=room.name, created_by=request.user)
     return chat_room
 
 
@@ -47,9 +47,9 @@ def create_room(request, room: ChatRoomSchema):
 def get_room(request, room_id: int):
     # 로그인된 사용자만 접근 가능
     if not request.user.is_authenticated:
-        return {"detail": "Authentication required."}, 401
+        return {"detail": "로그인을 해주세요."}, 401
     # 해당 채팅방이 로그인된 사용자에 의해 생성된 것인지 확인
-    room = get_object_or_404(ChatRoom, id=room_id, user=request.user)
+    room = get_object_or_404(ChatRoom, id=room_id, created_by=request.user)
     return room
 
 
@@ -58,9 +58,9 @@ def get_room(request, room_id: int):
 def update_room(request, room_id: int, room: ChatRoomSchema):
     # 로그인된 사용자만 접근 가능
     if not request.user.is_authenticated:
-        return {"detail": "Authentication required."}, 401
+        return {"detail": "로그인을 해주세요."}, 401
     # 해당 채팅방이 로그인된 사용자에 의해 생성된 것인지 확인
-    chat_room = get_object_or_404(ChatRoom, id=room_id, user=request.user)
+    chat_room = get_object_or_404(ChatRoom, id=room_id, created_by=request.user)
     chat_room.name = room.name
     chat_room.save()
     return chat_room
@@ -71,9 +71,9 @@ def update_room(request, room_id: int, room: ChatRoomSchema):
 def delete_room(request, room_id: int):
     # 로그인된 사용자만 접근 가능
     if not request.user.is_authenticated:
-        return {"detail": "Authentication required."}, 401
+        return {"detail": "로그인을 해주세요."}, 401
     # 해당 채팅방이 로그인된 사용자에 의해 생성된 것인지 확인
-    chat_room = get_object_or_404(ChatRoom, id=room_id, user=request.user)
+    chat_room = get_object_or_404(ChatRoom, id=room_id, created_by=request.user)
     chat_room.delete()
     return {"success": True}
 
@@ -91,10 +91,6 @@ async def chatbot_endpoint(request, payload: ChatbotRequestSchema):
     user_data = await get_user_data(user)
 
     question = payload.question
-    await create_question(question, user)
-
-    # 벡터 저장소에 파일 추가 - 비동기적으로 처리
-    await add_vector_file()
 
     # 챗봇을 통해 응답 생성
     chatbot = Chatbot_Run()
@@ -103,3 +99,10 @@ async def chatbot_endpoint(request, payload: ChatbotRequestSchema):
     response_content = await sync_to_async(str)(response.content)
 
     return 200, {"answer": response_content}
+
+
+from django.shortcuts import render
+
+
+def test(request):
+    return render(request, "chatbot/test.html")
