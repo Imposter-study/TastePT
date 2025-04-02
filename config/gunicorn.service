@@ -1,0 +1,14 @@
+[Unit]
+Description=Gunicorn daemon for TastePT Django application
+After=network.target
+
+[Service]
+User=ec2-user
+Group=ec2-user
+WorkingDirectory=/home/ec2-user/TastePT
+ExecStart=/home/ec2-user/.local/bin/gunicorn --workers 3 --bind 0.0.0.0:8000 --config /home/ec2-user/TastePT/gunicorn.conf.py config.wsgi:application
+Restart=on-failure
+Environment="PATH=/home/ec2-user/.local/bin:/usr/local/bin:/usr/bin:/bin"
+
+[Install]
+WantedBy=multi-user.target

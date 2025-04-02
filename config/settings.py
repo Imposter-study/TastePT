@@ -26,11 +26,13 @@ environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env("SECRET_KEY")
 
+# openai api
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env("DEBUG")
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = env("ALLOWED_HOSTS").split(",")
 
 # Application definition
 
@@ -41,14 +43,27 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.sites",
     # third-party
     "rest_framework",
+    "corsheaders",
+    "drf_spectacular",
+    "ninja",
+    # allauth
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.kakao",  # 카카오 로그인
     # apps
     "accounts",
     "chatbot",
+    "community",
 ]
 
+SITE_ID = 1
+
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -56,6 +71,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "allauth.account.middleware.AccountMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -76,6 +92,24 @@ TEMPLATES = [
     },
 ]
 
+CORS_ALLOW_CREDENTIALS = True  # 쿠키 및 인증 정보 허용
+CORS_ALLOWED_ORIGINS = env("FRONT_DOMAIN").split(",")
+
+# CSRF 설정
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_SAMESITE = "None"
+CSRF_COOKIE_HTTPONLY = False
+CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS").split(",")
+
+# 세션 엔진 설정
+SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+SESSION_CACHE_ALIAS = "default"
+SESSION_COOKIE_AGE = 604800
+SESSION_COOKIE_HTTPONLY = True
+SESSION_SAVE_EVERY_REQUEST = False
+SESSION_COOKIE_SAMESITE = "None"
+SESSION_COOKIE_SECURE = True
+
 AUTH_USER_MODEL = "accounts.User"
 
 WSGI_APPLICATION = "config.wsgi.application"
@@ -86,6 +120,7 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.SessionAuthentication",
         "rest_framework.authentication.BasicAuthentication",
     ),
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 # Database
@@ -101,6 +136,37 @@ DATABASES = {
         "PORT": 5432,
     }
 }
+
+# Redis 설정
+REDIS_HOST = env("REDIS_HOST")
+REDIS_PASSWORD = env("REDIS_PASSWORD")
+
+if REDIS_PASSWORD:
+    REDIS_URL = f"rediss://:{REDIS_PASSWORD}@{REDIS_HOST}:6379/0"
+else:
+    REDIS_URL = f"redis://{REDIS_HOST}:6379/0"
+
+# Cache 설정
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": REDIS_URL,
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        },
+    }
+}
+
+# Node.js 웹소켓 서버 URL
+NODE_SERVER_URL = env("NODE_SERVER_URL")
+
+# CICD 환경 설정
+if env("CI") == "true":
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -132,7 +198,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
@@ -144,7 +209,64 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
 ]
 
+# Media files
+if DEBUG:
+    # local storage
+    MEDIA_URL = "/media/"
+    MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+else:
+    # S3 Bucket
+    INSTALLED_APPS += ["storages"]
+
+    AWS_ACCESS_KEY_ID = env("AWS_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY = env("AWS_SECRET_ACCESS_KEY")
+    AWS_STORAGE_BUCKET_NAME = env("AWS_STORAGE_BUCKET_NAME")
+
+    AWS_S3_REGION_NAME = "ap-northeast-2"
+    AWS_S3_FILE_OVERWRITE = False
+    AWS_DEFAULT_ACL = "public-read"
+    AWS_S3_OBJECT_PARAMETERS = {
+        "CacheControl": "max-age=86400",
+        "ACL": "public-read",
+    }
+
+    AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"
+    MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
+
+    DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Langfuse 설정
+LANGFUSE_SECRET_KEY = os.getenv("LANGFUSE_SECRET_KEY")
+LANGFUSE_PUBLIC_KEY = os.getenv("LANGFUSE_PUBLIC_KEY")
+LANGFUSE_HOST = os.getenv("host")
+
+LANGFUSE_CONFIG = {
+    "secret_key": LANGFUSE_SECRET_KEY,
+    "public_key": LANGFUSE_PUBLIC_KEY,
+    "host": LANGFUSE_HOST,
+}
+
+# 이메일 설정
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+# Celery
+if REDIS_PASSWORD:
+    CELERY_BROKER_URL = f"rediss://:{REDIS_PASSWORD}@{REDIS_HOST}:6379/0"       # 작업을 처리한 메세지 큐 시스템(celery가 사용할 메세지 브로커의 url)
+    CELERY_RESULT_BACKEND = f"rediss://:{REDIS_PASSWORD}@{REDIS_HOST}:6379/0"   # 작업이 완료된 후 결과를 저장할 위치
+else:
+    CELERY_BROKER_URL = f"redis://{REDIS_HOST}:6379/0"
+    CELERY_RESULT_BACKEND = f"redis://{REDIS_HOST}:6379/0"
+
+CELERY_ACCEPT_CONTENT = ["json"]  # Celery가 수용할 작업의 콘텐츠 형식
+CELERY_TASK_SERIALIZER = "json"  # Celery가 작업을 직렬화할 때 사용할 형식
