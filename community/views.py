@@ -1,12 +1,5 @@
-import boto3
-import uuid
-from datetime import datetime
 from django.contrib.auth import get_user_model
-from django.conf import settings
-from django.core.files.base import ContentFile
-from django.core.files.storage import default_storage
-from django.db.models import Prefetch
-from django.db.models import Q
+from django.db.models import Prefetch, Q
 from django.shortcuts import render, get_object_or_404
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
@@ -14,10 +7,11 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from rest_framework import status, generics
-from .models import Post, Comment, UploadedImage
+from .models import Post, Comment, Report
 from .permissions import IsAuthorOrReadOnly
 from .serializers import PostSerializer, ImageUploadSerializer, CommentSerializer
 from .pagenations import PostPageNumberPagination
+from .utils import upload_image
 
 User = get_user_model()
 
@@ -57,149 +51,63 @@ class PostViewSet(ModelViewSet):
         return queryset
 
     def create(self, request, *args, **kwargs):
-        # 썸네일 이미지 처리
-        thumbnail_file = request.FILES.get("thumbnail")
-        thumbnail_url = ""
-
-        if thumbnail_file:
-            ext = (
-                thumbnail_file.name.split(".")[-1] if "." in thumbnail_file.name else ""
-            )
-            safe_filename = f"{uuid.uuid4().hex}.{ext}"
-
-            now = datetime.now()
-            relative_path = (
-                f"thumbnail/{now.year}/{now.month}/{now.day}/{safe_filename}"
+        try:
+            # 썸네일 이미지 처리
+            thumbnail_file = request.FILES.get("thumbnail")
+            thumbnail_url = (
+                upload_image(thumbnail_file, directory="thumbnail")
+                if thumbnail_file
+                else ""
             )
 
-            # DEBUG 모드에 따라 저장 로직 분기
-            if settings.DEBUG:
-                # 로컬 저장소에 저장
-                file_path = default_storage.save(
-                    relative_path, ContentFile(thumbnail_file.read())
-                )
-                thumbnail_url = settings.MEDIA_URL + file_path
-            else:
-                # S3에 업로드
-                try:
-                    s3_client = boto3.client(
-                        "s3",
-                        region_name=settings.AWS_S3_REGION_NAME,
-                        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-                        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-                    )
+            # 데이터에 썸네일 URL 추가
+            data = request.data.copy()
+            if thumbnail_url:
+                data["thumbnail"] = thumbnail_url
 
-                    # S3에 업로드
-                    s3_client.upload_fileobj(
-                        thumbnail_file,
-                        settings.AWS_STORAGE_BUCKET_NAME,
-                        relative_path,
-                        ExtraArgs={
-                            "ContentType": thumbnail_file.content_type,
-                            "ACL": settings.AWS_DEFAULT_ACL,
-                        },
-                    )
-
-                    if (
-                        hasattr(settings, "AWS_S3_CUSTOM_DOMAIN")
-                        and settings.AWS_S3_CUSTOM_DOMAIN
-                    ):
-                        thumbnail_url = (
-                            f"https://{settings.AWS_S3_CUSTOM_DOMAIN}/{relative_path}"
-                        )
-                    else:
-                        thumbnail_url = f"https://{settings.AWS_STORAGE_BUCKET_NAME}.s3.{settings.AWS_S3_REGION_NAME}.amazonaws.com/{relative_path}"
-                except Exception as e:
-                    return Response(
-                        {"error": f"썸네일 업로드 실패: {str(e)}"},
-                        status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    )
-
-        # 데이터에 썸네일 URL 추가
-        data = request.data.copy()
-        if thumbnail_url:
-            data["thumbnail"] = thumbnail_url
-
-        serializer = self.get_serializer(data=data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(
-            serializer.data, status=status.HTTP_201_CREATED, headers=headers
-        )
+            # 시리얼라이저 처리 및 저장
+            serializer = self.get_serializer(data=data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            return Response(
+                serializer.data, status=status.HTTP_201_CREATED, headers=headers
+            )
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
     def update(self, request, *args, **kwargs):
-        partial = kwargs.pop("partial", False)
-        instance = self.get_object()
+        try:
+            partial = kwargs.pop("partial", False)
+            instance = self.get_object()
 
-        # 썸네일 이미지 처리
-        thumbnail_file = request.FILES.get("thumbnail")
-        thumbnail_url = ""
-
-        if thumbnail_file:
-            ext = (
-                thumbnail_file.name.split(".")[-1] if "." in thumbnail_file.name else ""
-            )
-            safe_filename = f"{uuid.uuid4().hex}.{ext}"
-
-            now = datetime.now()
-            relative_path = (
-                f"thumbnail/{now.year}/{now.month}/{now.day}/{safe_filename}"
+            # 썸네일 이미지 처리
+            thumbnail_file = request.FILES.get("thumbnail")
+            thumbnail_url = (
+                upload_image(thumbnail_file, directory="thumbnail")
+                if thumbnail_file
+                else ""
             )
 
-            # DEBUG 모드에 따라 저장 로직 분기
-            if settings.DEBUG:
-                # 로컬 저장소에 저장
-                file_path = default_storage.save(
-                    relative_path, ContentFile(thumbnail_file.read())
-                )
-                thumbnail_url = settings.MEDIA_URL + file_path
-            else:
-                # S3에 업로드
-                try:
-                    s3_client = boto3.client(
-                        "s3",
-                        region_name=settings.AWS_S3_REGION_NAME,
-                        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-                        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-                    )
+            # 데이터에 썸네일 URL 추가
+            data = request.data.copy()
+            if thumbnail_url:
+                data["thumbnail"] = thumbnail_url
 
-                    # S3에 업로드
-                    s3_client.upload_fileobj(
-                        thumbnail_file,
-                        settings.AWS_STORAGE_BUCKET_NAME,
-                        relative_path,
-                        ExtraArgs={
-                            "ContentType": thumbnail_file.content_type,
-                            "ACL": settings.AWS_DEFAULT_ACL,
-                        },
-                    )
+            # 시리얼라이저 처리 및 저장
+            serializer = self.get_serializer(instance, data=data, partial=partial)
+            serializer.is_valid(raise_exception=True)
+            self.perform_update(serializer)
 
-                    if (
-                        hasattr(settings, "AWS_S3_CUSTOM_DOMAIN")
-                        and settings.AWS_S3_CUSTOM_DOMAIN
-                    ):
-                        thumbnail_url = (
-                            f"https://{settings.AWS_S3_CUSTOM_DOMAIN}/{relative_path}"
-                        )
-                    else:
-                        thumbnail_url = f"https://{settings.AWS_STORAGE_BUCKET_NAME}.s3.{settings.AWS_S3_REGION_NAME}.amazonaws.com/{relative_path}"
-                except Exception as e:
-                    return Response(
-                        {"error": f"썸네일 업로드 실패: {str(e)}"},
-                        status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    )
-
-        # 데이터에 썸네일 URL 추가
-        data = request.data.copy()
-        if thumbnail_url:
-            data["thumbnail"] = thumbnail_url
-
-        serializer = self.get_serializer(instance, data=data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-
-        return Response(serializer.data)
+            return Response(serializer.data)
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 
 class ImageUploadView(APIView):
@@ -214,84 +122,47 @@ class ImageUploadView(APIView):
 
         image_file = request.FILES["image"]
 
-        ext = image_file.name.split(".")[-1] if "." in image_file.name else ""
-        safe_filename = f"{uuid.uuid4().hex}.{ext}"
+        try:
+            file_url = upload_image(image_file)
 
-        now = datetime.now()
-        relative_path = f"posts/{now.year}/{now.month}/{now.day}/{safe_filename}"
-
-        # DEBUG 모드에 따라 저장 로직 분기
-        if settings.DEBUG:
-            # 로컬 저장소에 저장
-            try:
-                file_path = default_storage.save(
-                    relative_path, ContentFile(image_file.read())
-                )
-                file_url = settings.MEDIA_URL + file_path
-
-                serializer = ImageUploadSerializer(data={"image": file_url})
-                if serializer.is_valid():
-                    serializer.save()
-                    return Response(
-                        {"file_path": file_url}, status=status.HTTP_201_CREATED
-                    )
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-            except Exception as e:
-                return Response(
-                    {"error": f"이미지 업로드 실패: {str(e)}"},
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                )
-        else:
-            # S3에 업로드
-            try:
-                s3_client = boto3.client(
-                    "s3",
-                    region_name=settings.AWS_S3_REGION_NAME,
-                    aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-                    aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-                )
-
-                # S3에 업로드
-                s3_client.upload_fileobj(
-                    image_file,
-                    settings.AWS_STORAGE_BUCKET_NAME,
-                    relative_path,
-                    ExtraArgs={
-                        "ContentType": image_file.content_type,
-                        "ACL": settings.AWS_DEFAULT_ACL,
-                    },
-                )
-
-                if (
-                    hasattr(settings, "AWS_S3_CUSTOM_DOMAIN")
-                    and settings.AWS_S3_CUSTOM_DOMAIN
-                ):
-                    file_url = (
-                        f"https://{settings.AWS_S3_CUSTOM_DOMAIN}/{relative_path}"
-                    )
-                else:
-                    file_url = f"https://{settings.AWS_STORAGE_BUCKET_NAME}.s3.{settings.AWS_S3_REGION_NAME}.amazonaws.com/{relative_path}"
-
-                # 모델에 저장
-                serializer = ImageUploadSerializer(data={"image": file_url})
-                if serializer.is_valid():
-                    serializer.save()
-                    return Response(
-                        {"file_path": file_url}, status=status.HTTP_201_CREATED
-                    )
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-            except Exception as e:
-                return Response(
-                    {"error": f"S3 이미지 업로드 실패: {str(e)}"},
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                )
+            # 모델에 저장
+            serializer = ImageUploadSerializer(data={"image": file_url})
+            if serializer.is_valid():
+                serializer.save()
+                return Response({"file_path": file_url}, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response(
+                {"error": f"이미지 업로드 실패: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 
 # 댓글 수정 & 삭제 (PUT, DELETE)
 class CommentUpdateDeleteView(generics.UpdateAPIView, generics.DestroyAPIView):
-
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
+
+
+class ReportView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        type = request.data["type"]
+        reporter = request.user
+
+        if type == "post":
+            post = get_object_or_404(Post, pk=pk)
+            comment = None
+        elif type == "comment":
+            post = None
+            comment = get_object_or_404(Comment, pk=pk)
+        report = Report.objects.filter(reporter=reporter, post=post, comment=comment)
+
+        if report:
+            return Response({"detail": "이미 신고한 게시글/댓글 입니다"}, status=400)
+
+        Report.objects.create(reporter=reporter, post=post, comment=comment)
+
+        return Response({"detail": "신고가 완료되었습니다."}, status=201)

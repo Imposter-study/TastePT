@@ -120,3 +120,14 @@ class EmailVerificationToken(models.Model):
     user = models.OneToOneField(to=User, on_delete=models.CASCADE)
     token = models.UUIDField(default=uuid.uuid4, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+class EmailMessage(models.Model):
+    subject = models.CharField(max_length=127, verbose_name="제목")
+    message = models.TextField(verbose_name="내용")
+    recipients = models.ManyToManyField(to=User, verbose_name="받는사람")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="작성일")
+    sent_at = models.DateTimeField(null=True, blank=True, verbose_name="발송일")
+
+    def __str__(self):
+        return self.subject
