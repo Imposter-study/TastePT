@@ -3,10 +3,14 @@ from pydantic import BaseModel
 from datetime import datetime
 
 
+class UserSchema(Schema):
+    id: int
+    nickname: str
+
 class ChatRoomSchema(Schema):
     id: int = None
     name: str
-    user_id: int = None
+    created_by: UserSchema= None
 
 
 class MessageSchema(BaseModel):
