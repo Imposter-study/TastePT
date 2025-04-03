@@ -21,7 +21,7 @@ router = Router()
 def list_rooms(request):
     # 로그인된 사용자만 접근 가능
     if not request.user.is_authenticated:
-        return {"detail": "로그인을 해주세요."}, 401
+        return 400, {"detail": "로그인을 해주세요."}
     # 로그인된 사용자가 생성한 채팅방만 조회
     return ChatRoom.objects.filter(created_by=request.user)
 
@@ -31,11 +31,11 @@ def list_rooms(request):
 def create_room(request, room: ChatRoomSchema):
     # 로그인된 사용자만 접근 가능
     if not request.user.is_authenticated:
-        return {"detail": "로그인을 해주세요"}, 401
+        return 400, {"detail": "로그인을 해주세요"}
 
     # name 필드가 제공되지 않았을 경우 오류 처리
     if not room.name:
-        return {"detail": "Room name을 지정해주세요."}, 400
+        return 400, {"detail": "Room name을 지정해주세요."}
 
     # 채팅방 생성 시, 현재 로그인된 사용자(user)를 추가
     chat_room = ChatRoom.objects.create(name=room.name, created_by=request.user)
@@ -47,7 +47,7 @@ def create_room(request, room: ChatRoomSchema):
 def get_room(request, room_id: int):
     # 로그인된 사용자만 접근 가능
     if not request.user.is_authenticated:
-        return {"detail": "로그인을 해주세요."}, 401
+        return 400, {"detail": "로그인을 해주세요."}
     # 해당 채팅방이 로그인된 사용자에 의해 생성된 것인지 확인
     room = get_object_or_404(ChatRoom, id=room_id, created_by=request.user)
     return room
@@ -58,7 +58,7 @@ def get_room(request, room_id: int):
 def update_room(request, room_id: int, room: ChatRoomSchema):
     # 로그인된 사용자만 접근 가능
     if not request.user.is_authenticated:
-        return {"detail": "로그인을 해주세요."}, 401
+        return 400, {"detail": "로그인을 해주세요."}
     # 해당 채팅방이 로그인된 사용자에 의해 생성된 것인지 확인
     chat_room = get_object_or_404(ChatRoom, id=room_id, created_by=request.user)
     chat_room.name = room.name
@@ -71,7 +71,7 @@ def update_room(request, room_id: int, room: ChatRoomSchema):
 def delete_room(request, room_id: int):
     # 로그인된 사용자만 접근 가능
     if not request.user.is_authenticated:
-        return {"detail": "로그인을 해주세요."}, 401
+        return 400, {"detail": "로그인을 해주세요."}
     # 해당 채팅방이 로그인된 사용자에 의해 생성된 것인지 확인
     chat_room = get_object_or_404(ChatRoom, id=room_id, created_by=request.user)
     chat_room.delete()
