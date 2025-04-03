@@ -1,0 +1,48 @@
+name: CI/CD for Django on EC2
+
+on:
+  push:
+    branches:
+      - release
+
+jobs:
+  CI-CD:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install Docker Compose
+        run: |
+          sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+          docker-compose --version
+      
+      - name: Create dotenv
+        run: echo "${{ secrets.ENV }}" > .env
+      
+      - name: Build and test Docker container
+        run: |
+          docker-compose -f docker-compose.yml up -d --build
+          docker-compose down
+
+      - name: Deploy to EC2
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST_REL }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+          PRIVATE_KEY: ${{ secrets.EC2_PRIVATE_KEY }}
+        run: |
+          printf "%b" "$PRIVATE_KEY" > private_key.pem
+          chmod 600 private_key.pem
+          ssh -o StrictHostKeyChecking=no -i private_key.pem $EC2_USER@$EC2_HOST <<'EOF'
+          cd /home/ec2-user/TastePT
+          git pull origin main
+          sudo docker-compose down
+          sudo docker-compose up -d --build
+          sudo docker-compose exec django_app python manage.py migrate
+          EOF

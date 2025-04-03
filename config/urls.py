@@ -17,7 +17,6 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path, include
-from chatbot.views import api
 from django.conf import settings
 from django.conf.urls.static import static
 
@@ -26,7 +25,7 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/v1/accounts/", include("accounts.urls")),
-    path("api/v1/chatbot/", api.urls),
+    path("api/v1/", include("chatbot.urls"), name="chatbot"),
     path("api/v1/community/", include("community.urls")),
     path(
         "api/v1/schema/", SpectacularAPIView.as_view(), name="schema"

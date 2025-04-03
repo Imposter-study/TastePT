@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "drf_spectacular",
     "ninja",
+    "channels",
     # allauth
     "allauth",
     "allauth.account",
@@ -112,6 +113,14 @@ SESSION_COOKIE_SECURE = True
 
 AUTH_USER_MODEL = "accounts.User"
 
+ASGI_APPLICATION = "config.asgi.application"
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+    }
+}
+
 WSGI_APPLICATION = "config.wsgi.application"
 
 # 인증 방식을 세션과 기본 인증으로 변경함
@@ -157,6 +166,10 @@ CACHES = {
     }
 }
 
+# Node.js 웹소켓 서버 URL
+NODE_SERVER_URL = env("NODE_SERVER_URL")
+
+# CICD 환경 설정
 if env("CI") == "true":
     CACHES = {
         "default": {
@@ -255,3 +268,14 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+# Celery
+if REDIS_PASSWORD:
+    CELERY_BROKER_URL = f"rediss://:{REDIS_PASSWORD}@{REDIS_HOST}:6379/0"       # 작업을 처리한 메세지 큐 시스템(celery가 사용할 메세지 브로커의 url)
+    CELERY_RESULT_BACKEND = f"rediss://:{REDIS_PASSWORD}@{REDIS_HOST}:6379/0"   # 작업이 완료된 후 결과를 저장할 위치
+else:
+    CELERY_BROKER_URL = f"redis://{REDIS_HOST}:6379/0"
+    CELERY_RESULT_BACKEND = f"redis://{REDIS_HOST}:6379/0"
+
+CELERY_ACCEPT_CONTENT = ["json"]  # Celery가 수용할 작업의 콘텐츠 형식
+CELERY_TASK_SERIALIZER = "json"  # Celery가 작업을 직렬화할 때 사용할 형식

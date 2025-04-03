@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TastePT 챗봇</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f5f5f5;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+            height: 100vh;
+        }
+
+        /* 채팅방 목록 스타일 */
+        .rooms-section {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .rooms-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .create-room-form {
+            margin-bottom: 20px;
+        }
+
+        .room-list {
+            overflow-y: auto;
+            max-height: calc(100vh - 200px);
+        }
+
+        .room-item {
+            padding: 10px;
+            margin-bottom: 8px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .room-item:hover {
+            background: #e9ecef;
+        }
+
+        /* 채팅 섹션 스타일 */
+        .chat-section {
+            background: white;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .chat-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .connection-status {
+            font-size: 14px;
+            padding: 5px 10px;
+            border-radius: 15px;
+            background-color: #f8f9fa;
+        }
+
+        .connected {
+            color: green;
+        }
+
+        .disconnected {
+            color: red;
+        }
+
+        .chat-messages {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .message {
+            max-width: 70%;
+            padding: 10px 15px;
+            border-radius: 15px;
+            margin: 5px 0;
+        }
+
+        .user-message {
+            background: #007bff;
+            color: white;
+            align-self: flex-end;
+            border-radius: 15px 15px 0 15px;
+        }
+
+        .bot-message {
+            background: #e9ecef;
+            color: #212529;
+            align-self: flex-start;
+            border-radius: 15px 15px 15px 0;
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+        }
+
+        /* 입력 요소 스타일 */
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        button {
+            padding: 8px 16px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 10px;
+            margin: 10px 0;
+        }
+
+        .spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    {% csrf_token %}
+    <div class="container">
+        <!-- 채팅방 목록 섹션 -->
+        <div class="rooms-section">
+            <div class="rooms-header">
+                <h2>채팅방 목록</h2>
+            </div>
+            <div class="create-room-form">
+                <input type="text" id="newRoomName" placeholder="새 채팅방 이름">
+                <button onclick="createRoom()">방 만들기</button>
+            </div>
+            <div class="room-list" id="roomList">
+                <!-- 채팅방 목록이 여기에 동적으로 추가됩니다 -->
+            </div>
+        </div>
+
+        <!-- 채팅 섹션 -->
+        <div class="chat-section">
+            <div class="chat-header">
+                <h2 id="currentRoomName">채팅방을 선택해주세요</h2>
+                <div class="connection-status" id="connectionStatus">연결 상태: 연결 대기 중</div>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <!-- 메시지들이 여기에 동적으로 추가됩니다 -->
+            </div>
+            <div class="loading" id="loading" style="display: none;">
+                <div class="spinner"></div>
+            </div>
+            <div class="chat-input-container">
+                <input type="text" id="messageInput" placeholder="메시지를 입력하세요..." disabled>
+                <button onclick="sendMessage()" id="sendButton" disabled>전송</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <script>
+        let currentRoomId = null;
+        let chatSocket = null;
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const baseUrl = window.location.origin;
+        const connectionStatus = document.getElementById('connectionStatus');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+
+        // 채팅방 목록 로드
+        async function loadRooms() {
+            try {
+                const response = await axios.get(`${baseUrl}/api/v1/chatbot/room/`, {
+                    headers: {
+                        'X-CSRFToken': csrfToken
+                    }
+                });
+                const rooms = response.data;
+                const roomList = document.getElementById('roomList');
+                roomList.innerHTML = '';
+
+                rooms.forEach(room => {
+                    const roomElement = document.createElement('div');
+                    roomElement.className = 'room-item';
+                    roomElement.textContent = room.name;
+                    roomElement.onclick = () => selectRoom(room.id, room.name);
+                    roomList.appendChild(roomElement);
+                });
+            } catch (error) {
+                console.error('채팅방 목록을 불러오는데 실패했습니다:', error);
+            }
+        }
+
+        // 새 채팅방 생성
+        async function createRoom() {
+            const roomName = document.getElementById('newRoomName').value.trim();
+            if (!roomName) return;
+
+            try {
+                const response = await axios.post(`${baseUrl}/api/v1/chatbot/room/`, {
+                    name: roomName
+                }, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    }
+                });
+
+                const room = response.data;
+                document.getElementById('newRoomName').value = '';
+                loadRooms();
+                selectRoom(room.id, room.name);
+            } catch (error) {
+                console.error('채팅방 생성에 실패했습니다:', error);
+            }
+        }
+
+        // 웹소켓 연결
+        function connectWebSocket(roomId) {
+            // 기존 연결이 있으면 닫기
+            if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
+                chatSocket.close();
+            }
+
+            // 프로토콜(ws:// 또는 wss://)을 현재 페이지 프로토콜에 맞게 설정
+            const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+            // 웹소켓 연결
+            chatSocket = new WebSocket(`${wsProtocol}${window.location.host}/ws/chatbot/${roomId}/`);
+
+            // 연결 열림
+            chatSocket.onopen = function() {
+                connectionStatus.textContent = '연결 상태: ✅ 연결됨';
+                connectionStatus.classList.add('connected');
+                connectionStatus.classList.remove('disconnected');
+                messageInput.disabled = false;
+                sendButton.disabled = false;
+            };
+
+            // 연결 닫힘
+            chatSocket.onclose = function() {
+                connectionStatus.textContent = '연결 상태: ❌ 연결 끊김';
+                connectionStatus.classList.add('disconnected');
+                connectionStatus.classList.remove('connected');
+                messageInput.disabled = true;
+                sendButton.disabled = true;
+            };
+
+            // 메시지 수신
+            chatSocket.onmessage = function(e) {
+                const data = JSON.parse(e.data);
+                document.getElementById('loading').style.display = 'none';
+                
+                // 채팅 기록 처리
+                if (data.type === 'chat_history') {
+                    document.getElementById('chatMessages').innerHTML = '';
+                    if (data.messages && data.messages.length > 0) {
+                        data.messages.forEach(msg => {
+                            if (msg.sender === 'user') {
+                                addMessage(msg.message, true);
+                            } else if (msg.sender === 'bot') {
+                                addMessage(msg.message, false);
+                            } else if (msg.sender === 'system') {
+                                addSystemMessage(msg.message);
+                            }
+                        });
+                    }
+                } else if (data.message) {
+                    addMessage(data.message, false);
+                } else if (data.error) {
+                    addSystemMessage(`오류: ${data.error}`);
+                }
+            };
+
+            // 오류 처리
+            chatSocket.onerror = function(error) {
+                console.error('웹소켓 오류:', error);
+                addSystemMessage('웹소켓 연결 오류가 발생했습니다.');
+                document.getElementById('loading').style.display = 'none';
+            };
+        }
+
+        // 채팅방 선택
+        function selectRoom(roomId, roomName) {
+            currentRoomId = roomId;
+            document.getElementById('currentRoomName').textContent = roomName;
+            document.getElementById('chatMessages').innerHTML = '';
+            document.getElementById('loading').style.display = 'block';
+            messageInput.disabled = true;
+            sendButton.disabled = true;
+            connectWebSocket(roomId);
+        }
+
+        // 메시지 전송
+        function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message || !currentRoomId) return;
+
+            addMessage(message, true);
+            document.getElementById('loading').style.display = 'block';
+
+            if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
+                chatSocket.send(JSON.stringify({
+                    message: message
+                }));
+                messageInput.value = '';
+            } else {
+                addSystemMessage('웹소켓 연결이 없습니다. 다시 연결해 주세요.');
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        // 메시지 추가
+        function addMessage(message, isUser) {
+            const messagesDiv = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
+            
+            // 메시지 내용 설정
+            messageDiv.textContent = isUser ? message : `🤖: ${message}`;
+            
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        // 시스템 메시지 추가
+        function addSystemMessage(message) {
+            const messagesDiv = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message bot-message';
+            messageDiv.style.backgroundColor = '#ffeeba';
+            messageDiv.style.color = '#856404';
+            messageDiv.textContent = `⚠️ ${message}`;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        // 초기화
+        loadRooms();
+
+        // 엔터 키로 메시지 전송
+        messageInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
