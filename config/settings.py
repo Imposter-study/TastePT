@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "drf_spectacular",
     "ninja",
+    "channels",
     # allauth
     "allauth",
     "allauth.account",
@@ -111,6 +112,14 @@ SESSION_COOKIE_SAMESITE = "None"
 SESSION_COOKIE_SECURE = True
 
 AUTH_USER_MODEL = "accounts.User"
+
+ASGI_APPLICATION = "config.asgi.application"
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+    }
+}
 
 WSGI_APPLICATION = "config.wsgi.application"
 
