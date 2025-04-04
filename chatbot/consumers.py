@@ -91,7 +91,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 return
 
             # 사용자 메시지 저장
-            await self.save_user_question(message)
+            user_question = await self.save_user_question(message)
 
             # 사용자 정보 가져오기
             user_data = await get_user_data(self.user)
@@ -103,9 +103,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             response_content = await sync_to_async(str)(response.content)
 
             # 챗봇 응답 저장
-            await self.save_bot_response(
-                response_content, await self.save_user_question(message)
-            )
+            await self.save_bot_response(response_content, user_question)
 
             # 응답 전송
             await self.send(

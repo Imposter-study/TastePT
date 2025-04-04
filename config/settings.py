@@ -115,12 +115,6 @@ AUTH_USER_MODEL = "accounts.User"
 
 ASGI_APPLICATION = "config.asgi.application"
 
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer",
-    }
-}
-
 WSGI_APPLICATION = "config.wsgi.application"
 
 # 인증 방식을 세션과 기본 인증으로 변경함
@@ -164,6 +158,18 @@ CACHES = {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         },
     }
+}
+
+# Redis 채널 레이어
+REDIS_CHANNEL_HOST = f"redis://{REDIS_HOST}:6379/1"
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [REDIS_CHANNEL_HOST],
+        },
+    },
 }
 
 # Node.js 웹소켓 서버 URL
