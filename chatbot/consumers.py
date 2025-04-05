@@ -58,6 +58,18 @@ class ChatConsumer(AsyncWebsocketConsumer):
             for msg in messages
         ]
 
+    async def format_chat_history(self):
+        """Format chat history for the chatbot"""
+        messages = await self.get_chat_history()
+        formatted_history = []
+        for msg in messages:
+            role = "assistant" if msg["sender"] == "bot" else "user"
+            formatted_history.append({
+                "role": role,
+                "content": msg["message"]
+            })
+        return formatted_history
+
     @sync_to_async
     def save_user_question(self, message):
         return ChatMessage.objects.create(
@@ -97,13 +109,25 @@ class ChatConsumer(AsyncWebsocketConsumer):
             user_data = await get_user_data(self.user)
             user_data_str = await sync_to_async(str)(user_data)
 
+
+            # 채팅 기록 가져오기
+            chat_history = await self.format_chat_history()
+            if len(chat_history) > 1:
+                if len(chat_history) > 3:
+                    chat_history = chat_history[-4:]
+                else:
+                    chat_history = chat_history[-2:]
+
             # 챗봇 응답 생성
             chatbot = Chatbot_Run()
-            response = await chatbot.ask(message, user_data_str)
-            response_content = await sync_to_async(str)(response.content)
+            bot_response = await chatbot.ask(
+                query=message,
+                user_data=user_data_str,
+                chat_history=chat_history,
+            )
 
             # 챗봇 응답 저장
-            await self.save_bot_response(response_content, user_question)
+            await self.save_bot_response(bot_response.content, user_question)
 
             # 응답 전송
             await self.send(
@@ -111,7 +135,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     {
                         "sender": "chatbot",
                         "message_type": ChatMessage.CHATBOT_RESPONSE,
-                        "message": response_content,
+                        "message": bot_response.content,
                         "timestamp": (
                             await sync_to_async(ChatMessage.objects.latest)(
                                 "created_at"

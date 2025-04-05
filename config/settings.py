@@ -146,8 +146,10 @@ REDIS_PASSWORD = env("REDIS_PASSWORD")
 
 if REDIS_PASSWORD:
     REDIS_URL = f"rediss://:{REDIS_PASSWORD}@{REDIS_HOST}:6379/0"
+    REDIS_CHANNEL_HOST = f"rediss://:{REDIS_PASSWORD}@{REDIS_HOST}:6379/1"
 else:
     REDIS_URL = f"redis://{REDIS_HOST}:6379/0"
+    REDIS_CHANNEL_HOST = f"redis://{REDIS_HOST}:6379/1"
 
 # Cache 설정
 CACHES = {
@@ -161,7 +163,6 @@ CACHES = {
 }
 
 # Redis 채널 레이어
-REDIS_CHANNEL_HOST = f"redis://{REDIS_HOST}:6379/1"
 
 CHANNEL_LAYERS = {
     "default": {
