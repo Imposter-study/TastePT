@@ -128,7 +128,6 @@ class Chatbot_Run:
             | self.llm
         )
 
-
     async def ask(self, query: str, user_data, chat_history):
         # MMR로 문서 검색 후 BM25 기반 리랭킹
         mmr_recipes = await self.retriever.ainvoke(query)

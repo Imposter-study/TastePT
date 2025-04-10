@@ -278,8 +278,8 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 # Celery
 if REDIS_PASSWORD:
-    CELERY_BROKER_URL = f"rediss://:{REDIS_PASSWORD}@{REDIS_HOST}:6379/0?ssl_cert_reqs=CERT_OPTIONAL"       # 작업을 처리한 메세지 큐 시스템(celery가 사용할 메세지 브로커의 url)
-    CELERY_RESULT_BACKEND = f"rediss://:{REDIS_PASSWORD}@{REDIS_HOST}:6379/0?ssl_cert_reqs=CERT_OPTIONAL"   # 작업이 완료된 후 결과를 저장할 위치
+    CELERY_BROKER_URL = f"rediss://:{REDIS_PASSWORD}@{REDIS_HOST}:6379/0?ssl_cert_reqs=CERT_OPTIONAL"  # 작업을 처리한 메세지 큐 시스템(celery가 사용할 메세지 브로커의 url)
+    CELERY_RESULT_BACKEND = f"rediss://:{REDIS_PASSWORD}@{REDIS_HOST}:6379/0?ssl_cert_reqs=CERT_OPTIONAL"  # 작업이 완료된 후 결과를 저장할 위치
 else:
     CELERY_BROKER_URL = f"redis://{REDIS_HOST}:6379/0"
     CELERY_RESULT_BACKEND = f"redis://{REDIS_HOST}:6379/0"

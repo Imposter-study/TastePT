@@ -47,9 +47,15 @@ class Comment(TimeStamp):
 
 
 class Report(models.Model):
-    reporter = models.ForeignKey(to=User, on_delete=models.SET_NULL, null=True, related_name="reports")
-    post = models.ForeignKey(to=Post, on_delete=models.CASCADE, null=True, related_name="reports")
-    comment = models.ForeignKey(to=Comment, on_delete=models.CASCADE, null=True, related_name="reports")
+    reporter = models.ForeignKey(
+        to=User, on_delete=models.SET_NULL, null=True, related_name="reports"
+    )
+    post = models.ForeignKey(
+        to=Post, on_delete=models.CASCADE, null=True, related_name="reports"
+    )
+    comment = models.ForeignKey(
+        to=Comment, on_delete=models.CASCADE, null=True, related_name="reports"
+    )
 
     class Meta:
         # 중복 신고가 불가능하도록 여러 필드에 대해 unique 옵션 설정

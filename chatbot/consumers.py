@@ -64,10 +64,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         formatted_history = []
         for msg in messages:
             role = "assistant" if msg["sender"] == "bot" else "user"
-            formatted_history.append({
-                "role": role,
-                "content": msg["message"]
-            })
+            formatted_history.append({"role": role, "content": msg["message"]})
         return formatted_history
 
     @sync_to_async
@@ -108,7 +105,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             # 사용자 정보 가져오기
             user_data = await get_user_data(self.user)
             user_data_str = await sync_to_async(str)(user_data)
-
 
             # 채팅 기록 가져오기
             chat_history = await self.format_chat_history()

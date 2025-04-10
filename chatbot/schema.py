@@ -7,10 +7,11 @@ class UserSchema(Schema):
     id: int
     nickname: str
 
+
 class ChatRoomSchema(Schema):
     id: int = None
     name: str
-    created_by: UserSchema= None
+    created_by: UserSchema = None
 
 
 class MessageSchema(BaseModel):
