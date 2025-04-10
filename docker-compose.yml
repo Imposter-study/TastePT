@@ -13,29 +13,23 @@ services:
       - app_network
     volumes:
       - .:/app
-    command: daphne -b 0.0.0.0 -p 8000 config.asgi:application
+    command: gunicorn config.wsgi:application --bind 0.0.0.0:8000
 
-  node_server:
+  django_websocket:
     build:
-      context: ./node_server
-      dockerfile: Dockerfile
-    container_name: node_websocket
+      context: .
+    container_name: django_websocket
     env_file:
       - .env
     environment:
-      - NODE_ENV=production
-      - DJANGO_SERVER_URL=http://django_app:8000
-      - PORT=3000
+      - DJANGO_ENV=production
     ports:
-      - "3000:3000"
-    volumes:
-      - ./node_server:/app
-    depends_on:
-      - django_app
+      - "8001:8001"
     networks:
       - app_network
-    restart: unless-stopped
-    command: npm start
+    volumes:
+      - .:/app
+    command: daphne -b 0.0.0.0 -p 8001 config.asgi:application
 
   celery:
     build: .
@@ -60,7 +54,7 @@ services:
       - "80:80"
     depends_on:
       - django_app
-      - node_server
+      - django_websocket
     networks:
       - app_network
 
