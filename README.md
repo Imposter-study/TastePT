@@ -286,11 +286,7 @@
     - **Body**:
       ```json
       {
-        "question": "string",
-        "user_data": {
-          "allergy": ["string"],
-          "preferences": ["string"]
-        }
+        "query": "string"
       }
       ```
     - **Response**:

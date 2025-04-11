@@ -256,7 +256,7 @@ Recipe Chatbot for Lazy Perfectionists
     - **Body**:
       ```json
       {
-        "content": "string"
+        "query": "string"
       }
       ```
     - **Status Codes**:
