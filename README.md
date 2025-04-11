@@ -1,5 +1,5 @@
 # 맛P.T
-🇰🇷 한국어 | [🇺🇸 English](./README-en.md)
+🇰🇷 한국어 | [🇺🇸 English](./README_en.md)
 ## 소개
 ### 팀
 사기꾼 연구회
