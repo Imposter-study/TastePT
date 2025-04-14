@@ -220,7 +220,7 @@
   <summary>채팅방 관리</summary>
   
   - **채팅방 생성**
-    - **Endpoint**: `POST /api/chatbot/room/`
+    - **Endpoint**: `POST /api/v1/chatbot/room/`
     - **Body**:
       ```json
       {
@@ -241,7 +241,7 @@
       - 401: 인증되지 않은 사용자
 
   - **채팅방 이름 변경**
-    - **Endpoint**: `PUT /api/chatbot/room/{room_id}/`
+    - **Endpoint**: `PUT /api/v1/chatbot/room/{room_id}/`
     - **Body**:
       ```json
       {
@@ -264,7 +264,7 @@
       - 404: 채팅방을 찾을 수 없음
 
   - **채팅방 삭제**
-    - **Endpoint**: `DELETE /api/chatbot/room/{room_id}/`
+    - **Endpoint**: `DELETE /api/v1/chatbot/room/{room_id}/`
     - **Response**:
       ```json
       {
@@ -282,7 +282,7 @@
   <summary>레시피 챗봇</summary>
   
   - **레시피 질문**
-    - **Endpoint**: `POST /api/chatbot/room/{room_id}/message/`
+    - **Endpoint**: `POST /api/v1/chatbot/room/{room_id}/message/`
     - **Body**:
       ```json
       {
@@ -308,7 +308,7 @@
   <summary>게시글 관리</summary>
   
   - **게시글 목록 조회**
-    - **Endpoint**: `GET /api/community/`
+    - **Endpoint**: `GET /api/v1/community/`
     - **Response**:
       ```json
       {
@@ -349,7 +349,7 @@
       - 400: 잘못된 요청 파라미터
 
   - **게시글 생성**
-    - **Endpoint**: `POST /api/community/`
+    - **Endpoint**: `POST /api/v1/community/`
     - **Body**:
       ```json
       {
@@ -364,7 +364,7 @@
       - 401: 인증되지 않은 사용자
 
   - **게시글 수정**
-    - **Endpoint**: `PUT /api/community/{post_id}/`
+    - **Endpoint**: `PUT /api/v1/community/{post_id}/`
     - **Body**:
       ```json
       {
@@ -381,7 +381,7 @@
       - 404: 게시글을 찾을 수 없음
 
   - **게시글 삭제**
-    - **Endpoint**: `DELETE /api/community/{post_id}/`
+    - **Endpoint**: `DELETE /api/v1/community/{post_id}/`
     - **Status Codes**:
       - 204: 게시글이 성공적으로 삭제됨
       - 401: 인증되지 않은 사용자
@@ -393,7 +393,7 @@
   <summary>댓글 관리</summary>
   
   - **댓글 작성**
-    - **Endpoint**: `POST /api/community/{post_id}/comment/`
+    - **Endpoint**: `POST /api/v1/community/{post_id}/comment/`
     - **Body**:
       ```json
       {
@@ -407,7 +407,7 @@
       - 404: 게시글을 찾을 수 없음
 
   - **댓글 수정**
-    - **Endpoint**: `PUT /api/community/comment/{comment_id}/`
+    - **Endpoint**: `PUT /api/v1/community/comment/{comment_id}/`
     - **Body**:
       ```json
       {
@@ -422,7 +422,7 @@
       - 404: 댓글을 찾을 수 없음
 
   - **댓글 삭제**
-    - **Endpoint**: `DELETE /api/community/comment/{comment_id}/`
+    - **Endpoint**: `DELETE /api/v1/community/comment/{comment_id}/`
     - **Status Codes**:
       - 204: 댓글이 성공적으로 삭제됨
       - 401: 인증되지 않은 사용자
@@ -434,7 +434,7 @@
   <summary>대댓글 관리</summary>
   
   - **대댓글 작성**
-    - **Endpoint**: `POST /api/community/{post_id}/comment/{comment_id}/reply/`
+    - **Endpoint**: `POST /api/v1/community/{post_id}/comment/{comment_id}/reply/`
     - **Body**:
       ```json
       {
@@ -448,7 +448,7 @@
       - 404: 게시글 또는 댓글을 찾을 수 없음
 
   - **대댓글 수정**
-    - **Endpoint**: `PUT /api/community/comment/{reply_id}/`
+    - **Endpoint**: `PUT /api/v1/community/comment/{reply_id}/`
     - **Body**:
       ```json
       {
@@ -463,7 +463,7 @@
       - 404: 대댓글을 찾을 수 없음
 
   - **대댓글 삭제**
-    - **Endpoint**: `DELETE /api/community/comment/{reply_id}/`
+    - **Endpoint**: `DELETE /api/v1/community/comment/{reply_id}/`
     - **Status Codes**:
       - 204: 대댓글이 성공적으로 삭제됨
       - 401: 인증되지 않은 사용자
@@ -475,7 +475,7 @@
   <summary>신고 기능</summary>
   
   - **게시글 신고**
-    - **Endpoint**: `POST /api/community/{post_id}/report/`
+    - **Endpoint**: `POST /api/v1/community/{post_id}/report/`
     - **Body**:
       ```json
       {
@@ -490,7 +490,7 @@
       - 404: 게시글을 찾을 수 없음
 
   - **댓글 신고**
-    - **Endpoint**: `POST /api/community/comment/{comment_id}/report/`
+    - **Endpoint**: `POST /api/v1/community/comment/{comment_id}/report/`
     - **Body**:
       ```json
       {

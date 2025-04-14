@@ -205,7 +205,7 @@ Recipe Chatbot for Lazy Perfectionists
   <summary>Chat Room Management</summary>
   
   - **Create Chat Room**
-    - **Endpoint**: `POST /api/chatbot/room/`
+    - **Endpoint**: `POST /api/v1/chatbot/room/`
     - **Body**:
       ```json
       {
@@ -219,7 +219,7 @@ Recipe Chatbot for Lazy Perfectionists
       - 401: Unauthorized user
 
   - **Edit Chat Room Name**
-    - **Endpoint**: `PUT /api/chatbot/room/{room_id}/`
+    - **Endpoint**: `PUT /api/v1/chatbot/room/{room_id}/`
     - **Body**:
       ```json
       {
@@ -234,7 +234,7 @@ Recipe Chatbot for Lazy Perfectionists
       - 404: Chat room not found
 
   - **Delete Chat Room**
-    - **Endpoint**: `DELETE /api/chatbot/room/{room_id}/`
+    - **Endpoint**: `DELETE /api/v1/chatbot/room/{room_id}/`
     - **Response**:
       ```json
       {
@@ -252,7 +252,7 @@ Recipe Chatbot for Lazy Perfectionists
   <summary>Recipe Chatbot</summary>
   
   - **Recipe Question**
-    - **Endpoint**: `POST /api/chatbot/room/{room_id}/message/`
+    - **Endpoint**: `POST /api/v1/chatbot/room/{room_id}/message/`
     - **Body**:
       ```json
       {
@@ -272,7 +272,7 @@ Recipe Chatbot for Lazy Perfectionists
   <summary>Post Management</summary>
   
   - **Post List**
-    - **Endpoint**: `GET /api/community/`
+    - **Endpoint**: `GET /api/v1/community/`
     - **Response**:
       ```json
       {
@@ -298,7 +298,7 @@ Recipe Chatbot for Lazy Perfectionists
       - 400: Invalid request parameters
 
   - **Create Post**
-    - **Endpoint**: `POST /api/community/`
+    - **Endpoint**: `POST /api/v1/community/`
     - **Body**:
       ```json
       {
@@ -312,7 +312,7 @@ Recipe Chatbot for Lazy Perfectionists
       - 401: Unauthorized user
 
   - **Edit Post**
-    - **Endpoint**: `PUT /api/community/{post_id}/`
+    - **Endpoint**: `PUT /api/v1/community/{post_id}/`
     - **Body**:
       ```json
       {
@@ -328,7 +328,7 @@ Recipe Chatbot for Lazy Perfectionists
       - 404: Post not found
 
   - **Delete Post**
-    - **Endpoint**: `DELETE /api/community/{post_id}/`
+    - **Endpoint**: `DELETE /api/v1/community/{post_id}/`
     - **Status Codes**:
       - 204: Post deleted successfully
       - 401: Unauthorized user
@@ -340,7 +340,7 @@ Recipe Chatbot for Lazy Perfectionists
   <summary>Comment Management</summary>
   
   - **Create Comment**
-    - **Endpoint**: `POST /api/community/{post_id}/comment/`
+    - **Endpoint**: `POST /api/v1/community/{post_id}/comment/`
     - **Body**:
       ```json
       {
@@ -354,7 +354,7 @@ Recipe Chatbot for Lazy Perfectionists
       - 404: Post not found
 
   - **Edit Comment**
-    - **Endpoint**: `PUT /api/community/comment/{comment_id}/`
+    - **Endpoint**: `PUT /api/v1/community/comment/{comment_id}/`
     - **Body**:
       ```json
       {
@@ -369,7 +369,7 @@ Recipe Chatbot for Lazy Perfectionists
       - 404: Comment not found
 
   - **Delete Comment**
-    - **Endpoint**: `DELETE /api/community/comment/{comment_id}/`
+    - **Endpoint**: `DELETE /api/v1/community/comment/{comment_id}/`
     - **Status Codes**:
       - 204: Comment deleted successfully
       - 401: Unauthorized user
@@ -381,7 +381,7 @@ Recipe Chatbot for Lazy Perfectionists
   <summary>Reply Comment Management</summary>
   
   - **Create Reply Comment**
-    - **Endpoint**: `POST /api/community/{post_id}/comment/{comment_id}/reply/`
+    - **Endpoint**: `POST /api/v1/community/{post_id}/comment/{comment_id}/reply/`
     - **Body**:
       ```json
       {
@@ -395,7 +395,7 @@ Recipe Chatbot for Lazy Perfectionists
       - 404: Post or comment not found
 
   - **Edit Reply Comment**
-    - **Endpoint**: `PUT /api/community/comment/{reply_id}/`
+    - **Endpoint**: `PUT /api/v1/community/comment/{reply_id}/`
     - **Body**:
       ```json
       {
@@ -410,7 +410,7 @@ Recipe Chatbot for Lazy Perfectionists
       - 404: Reply comment not found
 
   - **Delete Reply Comment**
-    - **Endpoint**: `DELETE /api/community/comment/{reply_id}/`
+    - **Endpoint**: `DELETE /api/v1/community/comment/{reply_id}/`
     - **Status Codes**:
       - 204: Reply comment deleted successfully
       - 401: Unauthorized user
@@ -422,7 +422,7 @@ Recipe Chatbot for Lazy Perfectionists
   <summary>Report Feature</summary>
   
   - **Report Post**
-    - **Endpoint**: `POST /api/community/{post_id}/report/`
+    - **Endpoint**: `POST /api/v1/community/{post_id}/report/`
     - **Body**:
       ```json
       {
@@ -437,7 +437,7 @@ Recipe Chatbot for Lazy Perfectionists
       - 404: Post not found
 
   - **Report Comment**
-    - **Endpoint**: `POST /api/community/comment/{comment_id}/report/`
+    - **Endpoint**: `POST /api/v1/community/comment/{comment_id}/report/`
     - **Body**:
       ```json
       {
