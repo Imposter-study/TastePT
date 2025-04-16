@@ -1,7 +1,7 @@
 from accounts.serializers import UserSerializer
 from asgiref.sync import sync_to_async
 
-from .chatbot import VectorStoreManager
+from .vectorstore import ChromaVectorStore
 
 
 @sync_to_async
@@ -16,4 +16,4 @@ def get_user_data(user):
 
 @sync_to_async
 def add_vector_file():
-    VectorStoreManager().add_file()
+    ChromaVectorStore().add_file()

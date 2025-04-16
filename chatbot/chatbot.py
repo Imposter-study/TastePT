@@ -8,7 +8,7 @@ from langfuse import Langfuse
 from langfuse.callback import CallbackHandler
 
 from django.conf import settings
-from .templates.chatbot.vectorstore import VectorStoreManager
+from .vectorstore import ChromaVectorStore
 
 # Langfuse config 설정을 settings에서 가져오기
 langfuse = Langfuse(**settings.LANGFUSE_CONFIG)
@@ -20,7 +20,7 @@ class Chatbot_Run:
         print("Initializing RAGManager...")
 
         # LLM 설정
-        self.llm = ChatOpenAI(model_name="gpt-4o-mini", temperature=0.9)
+        self.llm = ChatOpenAI(model_name="gpt-4.1-nano", temperature=0.9)
 
         # 프롬프트 불러오기
         langfuse_prompt = langfuse.get_prompt("TastePT")
@@ -30,8 +30,8 @@ class Chatbot_Run:
             metadata={"langfuse_prompt": langfuse_prompt},
         )
 
-        self.db = VectorStoreManager()
-        self.retriever = self.db.get_retriever()
+        self.db = ChromaVectorStore()
+        self.retriever = self.db.as_retriever()
 
         # RAG Chain 생성
         self.rag_chain = (
