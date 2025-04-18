@@ -56,5 +56,5 @@ class ChromaVectorStore(VectorStoreBase):
     # 검색 기본값으로 MMR 방식 적용
     def as_retriever(self, **kwargs):
         kwargs.setdefault("search_type", "mmr")
-        kwargs.setdefault("search_kwargs", {"k": 3, "fetch_k": 5})
+        kwargs.setdefault("search_kwargs", {"k": 10, "fetch_k": 20})
         return self.db.as_retriever(**kwargs)
